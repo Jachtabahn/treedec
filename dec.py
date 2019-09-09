@@ -1,3 +1,5 @@
+from random import choice, seed
+
 class Graph:
 
     def __init__(self, adjacent=None, cops=None):
@@ -27,6 +29,14 @@ class Graph:
 
     def is_cop(self, n):
         return n in self.cops
+
+    def make_symmetric(self):
+        for node, neighbours in list(self.adjacent.items()):
+            for neigh in neighbours:
+                if neigh not in self.adjacent:
+                    self.adjacent[neigh] = [node]
+                elif node not in self.adjacent[neigh]:
+                    self.adjacent[neigh].append(node)
 
     def __str__(self):
         s = '----------- Graph -----------\n'
@@ -66,15 +76,15 @@ class TreeDecomposition:
 def treedec(split_graph, k):
     decomposition = TreeDecomposition(split_graph)
 
-    print(f'The given split graph is\n{split_graph}')
+    # print(f'The given split graph is\n{split_graph}')
 
     # want all children of this decomposition
     components = decompose_into_connected_components(split_graph)
     for escape_component in components:
-        print(f'The next escape component is\n{escape_component}')
+        # print(f'The next escape component is\n{escape_component}')
 
         num_cops = len(escape_component.cops)
-        print(f'Its number of cops is {num_cops}')
+        # print(f'Its number of cops is {num_cops}')
         if num_cops >= k:
             return None
 
@@ -82,11 +92,11 @@ def treedec(split_graph, k):
         child = None
         while child is None:
             next_split_graph = escape_component.copy()
-            cop_position = choose_cop(next_split_graph)
-            print(f'For that escape component we try setting a cop at {cop_position}')
+            cop_position = choose_random_cop(next_split_graph)
+            # print(f'For that escape component we try setting a cop at {cop_position}')
             next_split_graph.place(cop_position)
             child = treedec(next_split_graph, k)
-        print(f'We add a child decomposition with subgraph\n{child.subgraph}')
+        # print(f'We add a child decomposition with subgraph\n{child.subgraph}')
         decomposition.add(child)
 
     return decomposition
@@ -103,6 +113,7 @@ def fresh_node(components, graph):
             return n
     return None
 
+# every returned component is non-empty and has at least one node that is not a cop
 def decompose_into_connected_components(graph):
     components = []
     first_node = fresh_node(components, graph)
@@ -124,10 +135,21 @@ def decompose_into_connected_components(graph):
         first_node = fresh_node(components, graph)
     return components
 
+# expects graph to have at least one non-cop node
 def choose_cop(graph):
     for n in graph.nodes():
         if not graph.is_cop(n):
             return n
+    # unreachable
+
+# expects graph to have at least one non-cop node
+def choose_random_cop(graph):
+    node = None
+    while node is None:
+        node = choice(graph.nodes())
+        if graph.is_cop(node):
+            node = None
+    return node
 
 def get_neighbours_of_cops(graph):
     neighs = []
@@ -144,16 +166,21 @@ def show_connected_components(graph):
 
 if __name__ == '__main__':
     G = Graph({
-        1: [2, 5],
-        2: [1, 3, 4],
-        3: [2],
-        4: [2],
-        5: [1],
-        6: [7],
-        7: [6]
+        1: [2, 3, 4],
+        2: [5, 8],
+        3: [7, 8],
+        4: [9, 10],
+        5: [11, 12],
+        6: [13, 14],
+        7: [11, 13],
+        8: [12, 14],
+        9: [11, 14],
+        10: [12, 13]
     })
-    k = 2
+    G.make_symmetric()
+    k = 6
     print(f'We want a tree decomposition of width {k-1} for the following graph:\n{G}')
+    seed(0)
     treedecomposition = treedec(G, k)
     print('The final tree decomposition is')
     print(f"{treedecomposition.edges_string()}")
