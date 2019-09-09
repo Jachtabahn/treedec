@@ -75,23 +75,21 @@ class TreeDecomposition:
 
 def treedec(split_graph, k):
     decomposition = TreeDecomposition(split_graph)
-
-    # print(f'The given split graph is\n{split_graph}')
-
-    # want all children of this decomposition
     components = decompose_into_connected_components(split_graph)
-    for escape_component in components:
-        # print(f'The next escape component is\n{escape_component}')
 
-        num_cops = len(escape_component.cops)
-        # print(f'Its number of cops is {num_cops}')
-        if num_cops >= k:
+    total_num_cops = len(split_graph.cops)
+    jointsize = 0
+    if len(components) >= 3 or (len(components) == 2 and total_num_cops > 0):
+        jointsize = total_num_cops
+
+    for escape_component in components:
+        if len(escape_component.cops) >= k:
             return None
 
         # want at least one bag for this component
-        child = None
+        child_decomposition, child_jointsize = None, None
         tried_nodes = []
-        while child is None:
+        while child_decomposition is None or child_jointsize > 0:
             next_split_graph = escape_component.copy()
             cop_position = choose_random_cop(tried_nodes, next_split_graph)
             if cop_position is None:
@@ -99,10 +97,12 @@ def treedec(split_graph, k):
             tried_nodes.append(cop_position)
             next_split_graph.place(cop_position)
             child = treedec(next_split_graph, k)
-        # print(f'We add a child decomposition with subgraph\n{child.subgraph}')
-        decomposition.add(child)
+            child_decomposition, child_jointsize = child if child is not None else (None, None)
 
-    return decomposition
+        jointsize = max(jointsize, child_jointsize)
+        decomposition.add(child_decomposition)
+
+    return decomposition, jointsize
 
 def fresh_node(components, graph):
     for n in graph.nodes():
@@ -185,10 +185,11 @@ if __name__ == '__main__':
     k = 5
     print(f'We want a tree decomposition of width {k-1} for the following graph:\n{G}')
     seed(0)
-    treedecomposition = treedec(G, k)
-    if treedecomposition is None:
-        print(f'There is no tree decomposition of width {k-1} for this graph')
+    result = treedec(G, k)
+    if result is None:
+        print(f'There is no tree decomposition of width {k-1} and maximal joint size 0 for this graph')
         exit()
-    print('The final tree decomposition is')
+    treedecomposition, jointsize = result
+    print(f'The final tree decomposition, with width {k-1} and maximal joint size {jointsize}, is')
     print(f"{treedecomposition.edges_string()}")
     print(f"{treedecomposition}")
