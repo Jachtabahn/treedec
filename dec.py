@@ -90,10 +90,13 @@ def treedec(split_graph, k):
 
         # want at least one bag for this component
         child = None
+        tried_nodes = []
         while child is None:
             next_split_graph = escape_component.copy()
-            cop_position = choose_random_cop(next_split_graph)
-            # print(f'For that escape component we try setting a cop at {cop_position}')
+            cop_position = choose_random_cop(tried_nodes, next_split_graph)
+            if cop_position is None:
+                return None
+            tried_nodes.append(cop_position)
             next_split_graph.place(cop_position)
             child = treedec(next_split_graph, k)
         # print(f'We add a child decomposition with subgraph\n{child.subgraph}')
@@ -143,13 +146,14 @@ def choose_cop(graph):
     # unreachable
 
 # expects graph to have at least one non-cop node
-def choose_random_cop(graph):
-    node = None
-    while node is None:
-        node = choice(graph.nodes())
-        if graph.is_cop(node):
-            node = None
-    return node
+def choose_random_cop(tried_nodes, graph):
+    nodes = graph.nodes()
+    for n, node in enumerate(list(nodes)):
+        if graph.is_cop(node) or node in tried_nodes:
+            nodes.remove(node)
+    if not nodes:
+        return None
+    return choice(nodes)
 
 def get_neighbours_of_cops(graph):
     neighs = []
@@ -178,10 +182,13 @@ if __name__ == '__main__':
         10: [12, 13]
     })
     G.make_symmetric()
-    k = 6
+    k = 5
     print(f'We want a tree decomposition of width {k-1} for the following graph:\n{G}')
     seed(0)
     treedecomposition = treedec(G, k)
+    if treedecomposition is None:
+        print(f'There is no tree decomposition of width {k-1} for this graph')
+        exit()
     print('The final tree decomposition is')
     print(f"{treedecomposition.edges_string()}")
     print(f"{treedecomposition}")
