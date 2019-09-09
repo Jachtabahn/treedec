@@ -1,5 +1,3 @@
-
-
 class Graph:
 
     def __init__(self, adjacent=None, cops=None):
@@ -138,10 +136,16 @@ def get_neighbours_of_cops(graph):
             neighs += neighbours
     return neighs
 
+def show_connected_components(graph):
+    components = decompose_into_connected_components(graph)
+    print(f'There are {len(components)} connected components in the given graph')
+    for i, comp in enumerate(components):
+        print(f'Component #{i+1} is\n{comp}\n')
+
 if __name__ == '__main__':
     G = Graph({
         1: [2, 5],
-        2: [3, 4],
+        2: [1, 3, 4],
         3: [2],
         4: [2],
         5: [1],
