@@ -90,7 +90,7 @@ class TreeDecomposition:
     @param k Maximum size of bags of the returned tree decomposition
     @return a tree decomposition and 0, if a path decomposition of given width exists; and None otherwise
 '''
-def treedec(split_graph, k):
+def treedec(split_graph, k, j):
     components = decompose_into_connected_components(split_graph)
     total_num_cops = len(split_graph.cops)
     jointsize = 0
@@ -105,14 +105,14 @@ def treedec(split_graph, k):
         # want at least one bag for this component
         child_decomposition, child_jointsize = None, None
         tried_nodes = []
-        while child_decomposition is None or child_jointsize > 0:
+        while child_decomposition is None or child_jointsize > j:
             next_split_graph = escape_component.copy()
             cop_position = choose_random_cop(tried_nodes, next_split_graph)
             if cop_position is None:
                 return None
             tried_nodes.append(cop_position)
             next_split_graph.place(cop_position)
-            child = treedec(next_split_graph, k)
+            child = treedec(next_split_graph, k, j)
             child_decomposition, child_jointsize = child if child is not None else (None, None)
 
         jointsize = max(jointsize, child_jointsize)
@@ -275,17 +275,17 @@ if __name__ == '__main__':
         10: [12, 13]
     })
     G.make_symmetric()
-    k = 6
+    k, j = 6, 0
     logging.info(f'We want a tree decomposition of width {k-1} for the following graph:\n{G}')
     seed(0)
-    result = treedec(G, k)
+    result = treedec(G, k, j)
     if result is None:
-        logging.error(f'There is no tree decomposition of width {k-1} and maximal joint size 0 for this graph')
+        logging.error(f'There is no tree decomposition of width {k-1} and maximal joint size {j} for this graph')
         exit()
     treedecomposition, jointsize = result
     logging.info(f'The final tree decomposition, with width {k-1} and maximal joint size {jointsize}, is')
     logging.info(f"{treedecomposition.edges_string()}")
-    logging.info(f"{treedecomposition}")
+    # logging.info(f"{treedecomposition}")
 
     show_tree_decomposition_components(G, treedecomposition)
 
