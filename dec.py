@@ -73,6 +73,17 @@ class TreeDecomposition:
             s += str(child)
         return s
 
+'''
+    Computes a tree decomposition of width k-1 for a given graph. The given graph may contain cops and
+    the graph minus those cops might be disconnected.
+
+    The returned tree decomposition also has no joint nodes at all, that is, it is actually a
+    path decomposition.
+
+    @param split_graph A graph with cops, possibly disconnected by cops
+    @param k Maximum size of bags of the returned tree decomposition
+    @return a tree decomposition and 0, if a path decomposition of given width exists; and None otherwise
+'''
 def treedec(split_graph, k):
     decomposition = TreeDecomposition(split_graph)
     components = decompose_into_connected_components(split_graph)
@@ -116,7 +127,18 @@ def fresh_node(components, graph):
             return n
     return None
 
-# every returned component is non-empty and has at least one node that is not a cop
+'''
+    Decomposes a given graph minus its cop nodes into connected subgraphs, where each subgraph still contains
+    those cops that surround it. So we take a graph, remove all the cop nodes and that gives us a copless subgraph.
+    Then we decompose this copless graph into its connected mini subgraphs. Then we take each
+    connected mini subgraph's vertices and induce with them another mini cop subgraph using all the vertices,
+    including the cops, of the original graph. A list of these mini cop subgraphs is returned here.
+
+    In the returned list, every subgraph is non-empty and has at least one node that is not a cop.
+
+    @param graph Graph to decompose into mini cop subgraphs
+    @return List of graphs that are mini cop subgraphs of the given graph
+'''
 def decompose_into_connected_components(graph):
     components = []
     first_node = fresh_node(components, graph)
@@ -138,14 +160,15 @@ def decompose_into_connected_components(graph):
         first_node = fresh_node(components, graph)
     return components
 
-# expects graph to have at least one non-cop node
-def choose_cop(graph):
-    for n in graph.nodes():
-        if not graph.is_cop(n):
-            return n
-    # unreachable
+'''
+    Chooses a node according to a fixed random sequence of numbers fixed by some random seed at the beginning
+    of the program. This node will neither be a cop node nor one of the nodes in tried_nodes.
 
-# expects graph to have at least one non-cop node
+    @param tried_nodes List of nodes to be excluded from selection
+    @param graph the graph whose non-cop nodes are considered for selection
+    @return None if tried_nodes contains all the non-cop nodes of graph;
+        and a random non-cop node, that is not in tried_nodes, otherwise
+'''
 def choose_random_cop(tried_nodes, graph):
     nodes = graph.nodes()
     for n, node in enumerate(list(nodes)):
@@ -168,6 +191,17 @@ def show_connected_components(graph):
     for i, comp in enumerate(components):
         print(f'Component #{i+1} is\n{comp}\n')
 
+# def is_treedec(graph, treedecomposition):
+
+#     for node, neighbours in graph.adjacent.items():
+#         # compute connected components of all the bags containing 'node'
+
+#         # there should be exactly one such component
+
+#         # then consider all the neighbours of 'node' in the graph
+#         for neigh in neighbours:
+#             # neigh should be in some bag of that component
+
 if __name__ == '__main__':
     G = Graph({
         1: [2, 3, 4],
@@ -182,7 +216,7 @@ if __name__ == '__main__':
         10: [12, 13]
     })
     G.make_symmetric()
-    k = 5
+    k = 6
     print(f'We want a tree decomposition of width {k-1} for the following graph:\n{G}')
     seed(0)
     result = treedec(G, k)
