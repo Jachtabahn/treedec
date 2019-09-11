@@ -47,30 +47,29 @@ class Graph:
                 s += f'Cop    {n}: {a}\n'
         return s
 
-output_ids = 1
 class TreeDecomposition:
 
-    def __init__(self, subgraph):
-        self.subgraph = subgraph
-        self.children = []
+    def __init__(self, subgraph, subtrees):
+        self.adjacent = {0: []}
+        self.subgraphs = {0: subgraph}
 
-        global output_ids
-        self.output_id = output_ids
-        output_ids += 1
-
-    def add(self, child):
-        self.children.append(child)
+        for child in subtrees:
+            offset = len(self.adjacent)
+            for node in child.adjacent:
+                self.adjacent[node + offset] = [neigh + offset for neigh in child.adjacent[node]]
+                self.subgraphs[node + offset] = child.subgraphs[node]
+            self.adjacent[0].append(offset)
 
     def edges_string(self):
-        s = f'Bag {self.output_id}: ' + str([child.output_id for child in self.children]) + '\n'
-        for child in self.children:
-            s += child.edges_string()
+        s = ''
+        for bag, neighbours in self.adjacent.items():
+            s += f'Bag {bag}: {neighbours}\n'
         return s
 
     def __str__(self):
-        s = f'Bag {self.output_id} contains the subgraph\n' + str(self.subgraph) + '\n'
-        for child in self.children:
-            s += str(child)
+        s = ''
+        for bag, subgraph in self.subgraphs.items():
+            s += f'Bag {bag} contains the subgraph\n' + str(subgraph) + '\n'
         return s
 
 '''
@@ -85,14 +84,13 @@ class TreeDecomposition:
     @return a tree decomposition and 0, if a path decomposition of given width exists; and None otherwise
 '''
 def treedec(split_graph, k):
-    decomposition = TreeDecomposition(split_graph)
     components = decompose_into_connected_components(split_graph)
-
     total_num_cops = len(split_graph.cops)
     jointsize = 0
     if len(components) >= 3 or (len(components) == 2 and total_num_cops > 0):
         jointsize = total_num_cops
 
+    subtrees = []
     for escape_component in components:
         if len(escape_component.cops) >= k:
             return None
@@ -111,9 +109,10 @@ def treedec(split_graph, k):
             child_decomposition, child_jointsize = child if child is not None else (None, None)
 
         jointsize = max(jointsize, child_jointsize)
-        decomposition.add(child_decomposition)
+        subtrees.append(child_decomposition)
 
-    return decomposition, jointsize
+    treedecomposition = TreeDecomposition(split_graph, subtrees)
+    return treedecomposition, jointsize
 
 def fresh_node(components, graph):
     for n in graph.nodes():
