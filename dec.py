@@ -1,4 +1,7 @@
 from random import choice, seed
+import logging
+
+logging.basicConfig(format='%(message)s', level=logging.INFO)
 
 class Graph:
 
@@ -59,6 +62,10 @@ class TreeDecomposition:
                 self.adjacent[node + offset] = [neigh + offset for neigh in child.adjacent[node]]
                 self.subgraphs[node + offset] = child.subgraphs[node]
             self.adjacent[0].append(offset)
+            self.adjacent[offset].append(0)
+
+    def bags(self):
+        return list(self.adjacent.keys())
 
     def edges_string(self):
         s = ''
@@ -186,20 +193,73 @@ def get_neighbours_of_cops(graph):
 
 def show_connected_components(graph):
     components = decompose_into_connected_components(graph)
-    print(f'There are {len(components)} connected components in the given graph')
+    logging.debug(f'There are {len(components)} connected components in the given graph')
     for i, comp in enumerate(components):
-        print(f'Component #{i+1} is\n{comp}\n')
+        logging.debug(f'Component #{i+1} is\n{comp}\n')
 
-# def is_treedec(graph, treedecomposition):
+def fresh_bag(components, treedecomposition, node):
+    for bag in treedecomposition.bags():
+        if not treedecomposition.subgraphs[bag].is_cop(node): continue
+        inside = False
+        for comp in components:
+            if bag in comp:
+                inside = True
+                break
+        if not inside:
+            return bag
+    return None
 
-#     for node, neighbours in graph.adjacent.items():
-#         # compute connected components of all the bags containing 'node'
+def treedec_decompose_into_connected_components(treedecomposition, node):
+    components = []
+    first_bag = fresh_bag(components, treedecomposition, node)
+    while first_bag is not None:
+        worklist = [first_bag]
+        current_component = []
+        while worklist:
+            next_bag = worklist.pop()
+            if next_bag in current_component:
+                continue
+            if not treedecomposition.subgraphs[next_bag].is_cop(node):
+                continue
+            current_component.append(next_bag)
+            for neighbour in treedecomposition.adjacent[next_bag]:
+                worklist.append(neighbour)
+        components.append(current_component)
+        first_bag = fresh_bag(components, treedecomposition, node)
+    return components
 
-#         # there should be exactly one such component
+def check_tree_decomposition(graph, treedecomposition):
+    subtrees = dict()
+    for node in graph.adjacent:
+        # compute connected components of all the bags containing 'node'
+        components = treedec_decompose_into_connected_components(treedecomposition, node)
 
-#         # then consider all the neighbours of 'node' in the graph
-#         for neigh in neighbours:
-#             # neigh should be in some bag of that component
+        # there should be exactly one such component
+        if len(components) == 0: return f'Node {node} has no bags'
+        if len(components) > 1: return f'Node {node} has two unconnected bags'
+
+        subtrees[node] = components[0]
+
+    for node, neighbours in graph.adjacent.items():
+        subtree = subtrees[node]
+
+        # check all the edges of 'node'
+        for neigh in neighbours:
+            neigh_subtree = subtrees[neigh]
+            share_bag = False
+            for bag in subtree:
+                if bag in neigh_subtree:
+                    share_bag = True
+                    logging.debug(f'The edge between the nodes {node} and {neigh} is covered by the bag {bag}')
+                    break
+            if not share_bag:
+                return f'The edge between the nodes {node} and {neigh} is not covered'
+    return None
+
+def show_tree_decomposition_components(graph, treedecomposition):
+    for node in graph.nodes():
+        components = treedec_decompose_into_connected_components(treedecomposition, node)
+        logging.debug(f'The subtrees of node {node} are\n{components}')
 
 if __name__ == '__main__':
     G = Graph({
@@ -216,13 +276,22 @@ if __name__ == '__main__':
     })
     G.make_symmetric()
     k = 6
-    print(f'We want a tree decomposition of width {k-1} for the following graph:\n{G}')
+    logging.info(f'We want a tree decomposition of width {k-1} for the following graph:\n{G}')
     seed(0)
     result = treedec(G, k)
     if result is None:
-        print(f'There is no tree decomposition of width {k-1} and maximal joint size 0 for this graph')
+        logging.error(f'There is no tree decomposition of width {k-1} and maximal joint size 0 for this graph')
         exit()
     treedecomposition, jointsize = result
-    print(f'The final tree decomposition, with width {k-1} and maximal joint size {jointsize}, is')
-    print(f"{treedecomposition.edges_string()}")
-    print(f"{treedecomposition}")
+    logging.info(f'The final tree decomposition, with width {k-1} and maximal joint size {jointsize}, is')
+    logging.info(f"{treedecomposition.edges_string()}")
+    logging.info(f"{treedecomposition}")
+
+    show_tree_decomposition_components(G, treedecomposition)
+
+    error = check_tree_decomposition(G, treedecomposition)
+    if error is not None:
+        logging.error('The computed tree decomposition is invalid:')
+        logging.error(error)
+    else:
+        logging.info('The computed tree decomposition is valid.')
