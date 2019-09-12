@@ -69,6 +69,16 @@ class SearchTree:
         self.status = {0: STATUS_UNKNOWN}
         self.num_nodes = 1
 
+    def delete(self, node):
+        del self.predecessor[node]
+        del self.subgraph[node]
+        del self.successors[node]
+        del self.unprocessed_successors[node]
+        del self.is_bag[node]
+        del self.chosen_successor[node]
+        del self.status[node]
+        self.num_nodes -= 1
+
     def add(self, node, labelled_subgraph):
         new_node = self.num_nodes
         self.predecessor[new_node] = node
@@ -187,9 +197,17 @@ def compute_tree_decomposition(split_graph, maximum_bag_size):
             unknown_bags = [succ for succ in search_tree.unprocessed_successors[node] \
                 if search_tree.status[succ] == STATUS_UNKNOWN]
             if not unknown_bags:
-                search_tree.set_status(node, STATUS_FAILED)
                 pred = search_tree.get_predecessor(node)
-                if pred is None: return search_tree, False
+                assert pred is not None # because the root is always a bag
+
+                # clear memory
+                for failed_edge in search_tree.successors[pred]:
+                    failed_bags = search_tree.successors[failed_edge]
+                    if failed_bags is None: continue
+                    for failed_bag in failed_bags:
+                        search_tree.delete(failed_bag)
+
+                search_tree.set_status(node, STATUS_FAILED)
                 search_tree.mark_processed(pred, node)
                 search_tree.set_status(pred, STATUS_FAILED)
                 search_tree.chosen_successor[pred] = node
@@ -223,7 +241,6 @@ def compute_choosable_cops(escape_component, maximum_bag_size):
             neighbours = escape_component.adjacent[node]
             choosable += [neigh for neigh in neighbours if not escape_component.is_cop(neigh)]
     return choosable
-
 
 '''
     Decomposes a given graph minus its cop nodes into connected subgraphs, where each subgraph still contains
@@ -298,7 +315,7 @@ if __name__ == '__main__':
     #     6: [7]
     # })
     G.make_symmetric()
-    k = 6
+    k = 60
 
     logging.info(f'We want a tree decomposition of width {k-1} for the following graph:\n{G}')
     search_tree, success = compute_tree_decomposition(G, k)
