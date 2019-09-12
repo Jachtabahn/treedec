@@ -1,6 +1,5 @@
 from random import choice, seed
 import logging
-from verify import show_tree_decomposition_components, check_tree_decomposition
 
 logging.basicConfig(format='%(message)s', level=logging.DEBUG)
 
@@ -100,6 +99,27 @@ class SearchTree:
     def get_root(self):
         return 0
 
+    def nodes(self):
+        return list(self.successors.keys())
+
+    def edges_string(self):
+        s = ''
+        for node in self.nodes():
+            pred = self.predecessor[node]
+            if pred is None: continue
+            pred_type = 'Bag' if self.is_bag[pred] else 'Edge'
+            node_type = 'Bag' if self.is_bag[node] else 'Edge'
+            s += f'{pred_type} {pred} -> {node_type} {node}\n'
+        return s
+
+    def __str__(self):
+        s = ''
+        for node in self.nodes():
+            node_type = 'Bag' if self.is_bag[node] else 'Edge'
+            s += f'The status at {node_type} {node} is {self.status[node]}\n'
+            s += f'The chosen successor at {node_type} {node} is {self.chosen_successor[node]}\n'
+            s += f'The subgraph at {node_type} {node} is\n{self.subgraph[node]}'
+        return s
 '''
     Returns a pair of the search tree and a boolean indicating whether the search tree contains a valid
     tree decomposition.
@@ -108,14 +128,14 @@ def compute_tree_decomposition(split_graph, maximum_bag_size):
     search_tree = SearchTree(split_graph)
     node = search_tree.get_root()
     while 1:
-        logging.debug(f'The number of nodes in the search tree is {search_tree.num_nodes}')
         if search_tree.is_bag[node]:
             # add all required successor bag edges
             if search_tree.successors[node] is None:
                 search_tree.successors[node] = []
                 search_tree.unprocessed_successors[node] = []
 
-                components = decompose_into_connected_components(split_graph)
+                node_subgraph = search_tree.get_subgraph(node)
+                components = decompose_into_connected_components(node_subgraph)
                 for comp in components:
                     search_tree.add(node, comp)
 
@@ -136,6 +156,7 @@ def compute_tree_decomposition(split_graph, maximum_bag_size):
                 if pred is None: return search_tree, True
                 search_tree.mark_processed(pred, node)
                 search_tree.set_status(pred, STATUS_SUCCESS)
+                search_tree.chosen_successor[pred] = node
                 node = pred
             else:
                 unknown_subgraphs = [search_tree.get_subgraph(succ) for succ in unknown_bag_edges]
@@ -171,6 +192,7 @@ def compute_tree_decomposition(split_graph, maximum_bag_size):
                 if pred is None: return search_tree, False
                 search_tree.mark_processed(pred, node)
                 search_tree.set_status(pred, STATUS_FAILED)
+                search_tree.chosen_successor[pred] = node
                 node = pred
             else:
                 unknown_cops = [search_tree.get_subgraph(succ).new_cop for succ in unknown_bags]
@@ -182,7 +204,7 @@ def compute_tree_decomposition(split_graph, maximum_bag_size):
     The given list of labelled subgraphs is not empty.
 '''
 def choose_weakest_component(unknown_subgraphs):
-    return 0
+    return len(unknown_subgraphs)-1
 
 '''
     The given list of labelled subgraphs is not empty.
@@ -252,6 +274,7 @@ def show_connected_components(graph):
         logging.debug(f'Component #{i+1} is\n{comp}\n')
 
 if __name__ == '__main__':
+    # non-trivial graph on 14 vertices
     G = Graph({
         1: [2, 3, 4],
         2: [5, 8],
@@ -264,7 +287,23 @@ if __name__ == '__main__':
         9: [11, 14],
         10: [12, 13]
     })
+
+    # trivial forest on 7 vertices
+    # G = Graph({
+    #     1: [2, 5],
+    #     2: [3, 4],
+    #     6: [7]
+    # })
     G.make_symmetric()
-    k, j = 6, 0
+    k = 6
+
     logging.info(f'We want a tree decomposition of width {k-1} for the following graph:\n{G}')
-    compute_tree_decomposition(G, k)
+    search_tree, success = compute_tree_decomposition(G, k)
+    if success:
+        logging.info('Successfully computed a tree decomposition.')
+    else:
+        logging.error('Failed computing a tree decomposition.')
+        exit(1)
+
+    logging.debug(search_tree.edges_string())
+    logging.debug(str(search_tree))
