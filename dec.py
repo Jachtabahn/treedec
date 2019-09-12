@@ -1,13 +1,15 @@
 from random import choice, seed
 import logging
+from verify import show_tree_decomposition_components, check_tree_decomposition
 
-logging.basicConfig(format='%(message)s', level=logging.INFO)
+logging.basicConfig(format='%(message)s', level=logging.DEBUG)
 
 class Graph:
 
     def __init__(self, adjacent=None, cops=None):
         self.adjacent = adjacent if adjacent is not None else dict()
         self.cops = cops if cops is not None else []
+        self.new_cop = None
 
     def nodes(self):
         return list(self.adjacent.keys())
@@ -29,6 +31,7 @@ class Graph:
     def place(self, n):
         if n not in self.cops:
             self.cops.append(n)
+            self.new_cop = n
 
     def is_cop(self, n):
         return n in self.cops
@@ -50,88 +53,152 @@ class Graph:
                 s += f'Cop    {n}: {a}\n'
         return s
 
-class TreeDecomposition:
+STATUS_UNKNOWN = 0
+STATUS_FAILED = 1
+STATUS_SUCCESS = 2
 
-    def __init__(self, subgraph, subtrees):
-        self.adjacent = {0: []}
-        self.subgraphs = {0: subgraph}
+class SearchTree:
 
-        for child in subtrees:
-            offset = len(self.adjacent)
-            for node in child.adjacent:
-                self.adjacent[node + offset] = [neigh + offset for neigh in child.adjacent[node]]
-                self.subgraphs[node + offset] = child.subgraphs[node]
-            self.adjacent[0].append(offset)
-            self.adjacent[offset].append(0)
+    def __init__(self, split_graph):
+        self.predecessor = {0: None}
+        self.subgraph = {0: split_graph}
 
-    def bags(self):
-        return list(self.adjacent.keys())
+        self.successors = {0: None}
+        self.unprocessed_successors = {0: None}
+        self.is_bag = {0: True}
+        self.chosen_successor = {0: None}
+        self.status = {0: STATUS_UNKNOWN}
+        self.num_nodes = 1
 
-    def edges_string(self):
-        s = ''
-        for bag, neighbours in self.adjacent.items():
-            s += f'Bag {bag}: {neighbours}\n'
-        return s
+    def add(self, node, labelled_subgraph):
+        new_node = self.num_nodes
+        self.predecessor[new_node] = node
+        self.subgraph[new_node] = labelled_subgraph
 
-    def __str__(self):
-        s = ''
-        for bag, subgraph in self.subgraphs.items():
-            s += f'Bag {bag} contains the subgraph\n' + str(subgraph) + '\n'
-        return s
+        self.successors[new_node] = None
+        self.unprocessed_successors[new_node] = None
+        self.is_bag[new_node] = not self.is_bag[node]
+        self.chosen_successor[new_node] = None
+        self.status[new_node] = STATUS_UNKNOWN
+
+        self.successors[node].append(new_node)
+        self.unprocessed_successors[node].append(new_node)
+        self.num_nodes += 1
+
+    def set_status(self, node, status):
+        self.status[node] = status
+
+    def get_predecessor(self, node):
+        return self.predecessor[node]
+
+    def mark_processed(self, pred, node):
+        self.unprocessed_successors[pred].remove(node)
+
+    def get_subgraph(self, node):
+        return self.subgraph[node]
+
+    def get_root(self):
+        return 0
 
 '''
-    Computes a tree decomposition of width k-1 for a given graph. The given graph may contain cops and
-    the graph minus those cops might be disconnected.
-
-    The returned tree decomposition also has no joint nodes at all, that is, it is actually a
-    path decomposition.
-
-    @param split_graph A graph with cops, possibly disconnected by cops
-    @param k Maximum size of bags of the returned tree decomposition
-    @return a tree decomposition and 0, if a path decomposition of given width exists; and None otherwise
+    Returns a pair of the search tree and a boolean indicating whether the search tree contains a valid
+    tree decomposition.
 '''
-def treedec(split_graph, k, j):
-    components = decompose_into_connected_components(split_graph)
-    total_num_cops = len(split_graph.cops)
-    jointsize = 0
-    if len(components) >= 3 or (len(components) == 2 and total_num_cops > 0):
-        jointsize = total_num_cops
+def compute_tree_decomposition(split_graph, maximum_bag_size):
+    search_tree = SearchTree(split_graph)
+    node = search_tree.get_root()
+    while 1:
+        logging.debug(f'The number of nodes in the search tree is {search_tree.num_nodes}')
+        if search_tree.is_bag[node]:
+            # add all required successor bag edges
+            if search_tree.successors[node] is None:
+                search_tree.successors[node] = []
+                search_tree.unprocessed_successors[node] = []
 
-    subtrees = []
-    for escape_component in components:
-        if len(escape_component.cops) >= k:
-            return None
+                components = decompose_into_connected_components(split_graph)
+                for comp in components:
+                    search_tree.add(node, comp)
 
-        # want at least one bag for this component
-        child_decomposition, child_jointsize = None, None
-        tried_nodes = []
-        while child_decomposition is None or child_jointsize > j:
-            next_split_graph = escape_component.copy()
-            cop_position = choose_random_cop(tried_nodes, next_split_graph)
-            if cop_position is None:
-                return None
-            tried_nodes.append(cop_position)
-            next_split_graph.place(cop_position)
-            child = treedec(next_split_graph, k, j)
-            child_decomposition, child_jointsize = child if child is not None else (None, None)
+            # quit on failure because we need every component to work out
+            if search_tree.status[node] == STATUS_FAILED:
+                pred = search_tree.get_predecessor(node)
+                if pred is None: return search_tree, False
+                search_tree.mark_processed(pred, node)
+                node = pred
+                continue
 
-        jointsize = max(jointsize, child_jointsize)
-        subtrees.append(child_decomposition)
+            # choose some unworked successor
+            unknown_bag_edges = [succ for succ in search_tree.unprocessed_successors[node] \
+                if search_tree.status[succ] == STATUS_UNKNOWN]
+            if not unknown_bag_edges:
+                search_tree.set_status(node, STATUS_SUCCESS)
+                pred = search_tree.get_predecessor(node)
+                if pred is None: return search_tree, True
+                search_tree.mark_processed(pred, node)
+                search_tree.set_status(pred, STATUS_SUCCESS)
+                node = pred
+            else:
+                unknown_subgraphs = [search_tree.get_subgraph(succ) for succ in unknown_bag_edges]
+                index = choose_weakest_component(unknown_subgraphs)
+                node = unknown_bag_edges[index]
+        else:
+            # add all possible successor bags
+            if search_tree.successors[node] is None:
+                search_tree.successors[node] = []
+                search_tree.unprocessed_successors[node] = []
 
-    treedecomposition = TreeDecomposition(split_graph, subtrees)
-    return treedecomposition, jointsize
+                escape_component = search_tree.get_subgraph(node)
+                choosable_cops = compute_choosable_cops(escape_component, maximum_bag_size)
+                for cop in choosable_cops:
+                    new_subgraph = escape_component.copy()
+                    new_subgraph.place(cop)
+                    search_tree.add(node, new_subgraph)
 
-def fresh_node(components, graph):
-    for n in graph.nodes():
-        if graph.is_cop(n): continue
-        inside = False
-        for comp in components:
-            if n in comp.nodes():
-                inside = True
-                break
-        if not inside:
-            return n
+            # quit on success because we only need some cop to work
+            if search_tree.status[node] == STATUS_SUCCESS:
+                pred = search_tree.get_predecessor(node)
+                if pred is None: return search_tree, True
+                search_tree.mark_processed(pred, node)
+                node = pred
+                continue
+
+            # choose some unworked successor
+            unknown_bags = [succ for succ in search_tree.unprocessed_successors[node] \
+                if search_tree.status[succ] == STATUS_UNKNOWN]
+            if not unknown_bags:
+                search_tree.set_status(node, STATUS_FAILED)
+                pred = search_tree.get_predecessor(node)
+                if pred is None: return search_tree, False
+                search_tree.mark_processed(pred, node)
+                search_tree.set_status(pred, STATUS_FAILED)
+                node = pred
+            else:
+                unknown_cops = [search_tree.get_subgraph(succ).new_cop for succ in unknown_bags]
+                index = choose_strongest_cop(search_tree.get_subgraph(node), unknown_cops)
+                node = unknown_bags[index]
     return None
+
+'''
+    The given list of labelled subgraphs is not empty.
+'''
+def choose_weakest_component(unknown_subgraphs):
+    return 0
+
+'''
+    The given list of labelled subgraphs is not empty.
+'''
+def choose_strongest_cop(subgraph, unknown_cops):
+    return 0
+
+def compute_choosable_cops(escape_component, maximum_bag_size):
+    choosable = []
+    if len(escape_component.cops) >= maximum_bag_size:
+        return choosable
+    for node in escape_component.nodes():
+        if not escape_component.is_cop(node):
+            choosable.append(node)
+    return choosable
+
 
 '''
     Decomposes a given graph minus its cop nodes into connected subgraphs, where each subgraph still contains
@@ -146,6 +213,18 @@ def fresh_node(components, graph):
     @return List of graphs that are mini cop subgraphs of the given graph
 '''
 def decompose_into_connected_components(graph):
+    def fresh_node(components, graph):
+        for n in graph.nodes():
+            if graph.is_cop(n): continue
+            inside = False
+            for comp in components:
+                if n in comp.nodes():
+                    inside = True
+                    break
+            if not inside:
+                return n
+        return None
+
     components = []
     first_node = fresh_node(components, graph)
     while first_node is not None:
@@ -166,100 +245,11 @@ def decompose_into_connected_components(graph):
         first_node = fresh_node(components, graph)
     return components
 
-'''
-    Chooses a node according to a fixed random sequence of numbers fixed by some random seed at the beginning
-    of the program. This node will neither be a cop node nor one of the nodes in tried_nodes.
-
-    @param tried_nodes List of nodes to be excluded from selection
-    @param graph the graph whose non-cop nodes are considered for selection
-    @return None if tried_nodes contains all the non-cop nodes of graph;
-        and a random non-cop node, that is not in tried_nodes, otherwise
-'''
-def choose_random_cop(tried_nodes, graph):
-    nodes = graph.nodes()
-    for n, node in enumerate(list(nodes)):
-        if graph.is_cop(node) or node in tried_nodes:
-            nodes.remove(node)
-    if not nodes:
-        return None
-    return choice(nodes)
-
-def get_neighbours_of_cops(graph):
-    neighs = []
-    for n, neighbours in graph.adjacent.items():
-        if graph.is_cop(n):
-            neighs += neighbours
-    return neighs
-
 def show_connected_components(graph):
     components = decompose_into_connected_components(graph)
     logging.debug(f'There are {len(components)} connected components in the given graph')
     for i, comp in enumerate(components):
         logging.debug(f'Component #{i+1} is\n{comp}\n')
-
-def fresh_bag(components, treedecomposition, node):
-    for bag in treedecomposition.bags():
-        if not treedecomposition.subgraphs[bag].is_cop(node): continue
-        inside = False
-        for comp in components:
-            if bag in comp:
-                inside = True
-                break
-        if not inside:
-            return bag
-    return None
-
-def treedec_decompose_into_connected_components(treedecomposition, node):
-    components = []
-    first_bag = fresh_bag(components, treedecomposition, node)
-    while first_bag is not None:
-        worklist = [first_bag]
-        current_component = []
-        while worklist:
-            next_bag = worklist.pop()
-            if next_bag in current_component:
-                continue
-            if not treedecomposition.subgraphs[next_bag].is_cop(node):
-                continue
-            current_component.append(next_bag)
-            for neighbour in treedecomposition.adjacent[next_bag]:
-                worklist.append(neighbour)
-        components.append(current_component)
-        first_bag = fresh_bag(components, treedecomposition, node)
-    return components
-
-def check_tree_decomposition(graph, treedecomposition):
-    subtrees = dict()
-    for node in graph.adjacent:
-        # compute connected components of all the bags containing 'node'
-        components = treedec_decompose_into_connected_components(treedecomposition, node)
-
-        # there should be exactly one such component
-        if len(components) == 0: return f'Node {node} has no bags'
-        if len(components) > 1: return f'Node {node} has two unconnected bags'
-
-        subtrees[node] = components[0]
-
-    for node, neighbours in graph.adjacent.items():
-        subtree = subtrees[node]
-
-        # check all the edges of 'node'
-        for neigh in neighbours:
-            neigh_subtree = subtrees[neigh]
-            share_bag = False
-            for bag in subtree:
-                if bag in neigh_subtree:
-                    share_bag = True
-                    logging.debug(f'The edge between the nodes {node} and {neigh} is covered by the bag {bag}')
-                    break
-            if not share_bag:
-                return f'The edge between the nodes {node} and {neigh} is not covered'
-    return None
-
-def show_tree_decomposition_components(graph, treedecomposition):
-    for node in graph.nodes():
-        components = treedec_decompose_into_connected_components(treedecomposition, node)
-        logging.debug(f'The subtrees of node {node} are\n{components}')
 
 if __name__ == '__main__':
     G = Graph({
@@ -277,21 +267,4 @@ if __name__ == '__main__':
     G.make_symmetric()
     k, j = 6, 0
     logging.info(f'We want a tree decomposition of width {k-1} for the following graph:\n{G}')
-    seed(0)
-    result = treedec(G, k, j)
-    if result is None:
-        logging.error(f'There is no tree decomposition of width {k-1} and maximal joint size {j} for this graph')
-        exit()
-    treedecomposition, jointsize = result
-    logging.info(f'The final tree decomposition, with width {k-1} and maximal joint size {jointsize}, is')
-    logging.info(f"{treedecomposition.edges_string()}")
-    # logging.info(f"{treedecomposition}")
-
-    show_tree_decomposition_components(G, treedecomposition)
-
-    error = check_tree_decomposition(G, treedecomposition)
-    if error is not None:
-        logging.error('The computed tree decomposition is invalid:')
-        logging.error(error)
-    else:
-        logging.info('The computed tree decomposition is valid.')
+    compute_tree_decomposition(G, k)
