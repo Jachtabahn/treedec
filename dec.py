@@ -231,15 +231,12 @@ def choose_strongest_cop(subgraph, unknown_cops):
     return 0
 
 def compute_choosable_cops(escape_component, maximum_bag_size):
-    if len(escape_component.cops) >= maximum_bag_size:
-        return []
-    if len(escape_component.cops) == 0:
-        return list(escape_component.nodes())
     choosable = []
+    if len(escape_component.cops) >= maximum_bag_size:
+        return choosable
     for node in escape_component.nodes():
-        if escape_component.is_cop(node):
-            neighbours = escape_component.adjacent[node]
-            choosable += [neigh for neigh in neighbours if not escape_component.is_cop(neigh)]
+        if not escape_component.is_cop(node):
+            choosable.append(node)
     return choosable
 
 '''
