@@ -1,0 +1,497 @@
+digraph {
+    graph [compound=true, ranksep=1, nodesep=1];
+    edge [penwidth=3];
+    node [style=filled, color=aliceblue];
+
+    subgraph cluster_b0 {
+        graph [style=rounded, bgcolor="#ff8c00b2", penwidth=8, color=green3];
+        edge [penwidth=1, dir=none];
+        label = "Bag 0";
+        b0 [style=invis];
+
+        "b0_1" [label="1"];
+        "b0_2" [label="2"];
+        "b0_3" [label="3"];
+        "b0_4" [label="4"];
+        "b0_5" [label="5"];
+        "b0_6" [label="6"];
+        "b0_7" [label="7"];
+
+        "b0_1" -> "b0_2";
+        "b0_1" -> "b0_5";
+        "b0_2" -> "b0_3";
+        "b0_2" -> "b0_4";
+        "b0_6" -> "b0_7";
+    }
+
+    subgraph cluster_e1 {
+        graph [style=rounded, bgcolor="#00ced172", penwidth=8, color=crimson];
+        edge [penwidth=1, dir=none];
+        label = "Edge 1";
+        e1 [style=invis];
+
+        "e1_1" [label="1"];
+        "e1_2" [label="2"];
+        "e1_3" [label="3"];
+        "e1_4" [label="4"];
+        "e1_5" [label="5"];
+        "e1_6" [label="6", style=invis];
+        "e1_7" [label="7", style=invis];
+
+        "e1_1" -> "e1_2";
+        "e1_1" -> "e1_5";
+        "e1_2" -> "e1_3";
+        "e1_2" -> "e1_4";
+        "e1_6" -> "e1_7" [style=invis];
+    }
+
+    subgraph cluster_b3 {
+        graph [style=rounded, bgcolor="#ff8c00b2", penwidth=8, color=gray];
+        edge [penwidth=1, dir=none];
+        label = "Bag 3";
+        b3 [style=invis];
+
+        "b3_1" [label="1", color=darkgreen];
+        "b3_2" [label="2"];
+        "b3_3" [label="3"];
+        "b3_4" [label="4"];
+        "b3_5" [label="5"];
+        "b3_6" [label="6", style=invis];
+        "b3_7" [label="7", style=invis];
+
+        "b3_1" -> "b3_2";
+        "b3_1" -> "b3_5";
+        "b3_2" -> "b3_3";
+        "b3_2" -> "b3_4";
+        "b3_6" -> "b3_7" [style=invis];
+    }
+
+    subgraph cluster_e8 {
+        graph [style=rounded, bgcolor="#00ced172", penwidth=8, color=green3];
+        edge [penwidth=1, dir=none];
+        label = "Edge 8";
+        e8 [style=invis];
+
+        "e8_1" [label="1", color=gray];
+        "e8_2" [label="2", style=invis];
+        "e8_3" [label="3", style=invis];
+        "e8_4" [label="4", style=invis];
+        "e8_5" [label="5"];
+        "e8_6" [label="6", style=invis];
+        "e8_7" [label="7", style=invis];
+
+        "e8_1" -> "e8_2" [style=invis];
+        "e8_1" -> "e8_5";
+        "e8_2" -> "e8_3" [style=invis];
+        "e8_2" -> "e8_4" [style=invis];
+        "e8_6" -> "e8_7" [style=invis];
+    }
+
+    subgraph cluster_b10 {
+        graph [style=rounded, bgcolor="#ff8c00b2", penwidth=8, color=green3];
+        edge [penwidth=1, dir=none];
+        label = "Bag 10";
+        b10 [style=invis];
+
+        "b10_1" [label="1", color=gray];
+        "b10_2" [label="2", style=invis];
+        "b10_3" [label="3", style=invis];
+        "b10_4" [label="4", style=invis];
+        "b10_5" [label="5", color=darkgreen];
+        "b10_6" [label="6", style=invis];
+        "b10_7" [label="7", style=invis];
+
+        "b10_1" -> "b10_2" [style=invis];
+        "b10_1" -> "b10_5";
+        "b10_2" -> "b10_3" [style=invis];
+        "b10_2" -> "b10_4" [style=invis];
+        "b10_6" -> "b10_7" [style=invis];
+    }
+
+    subgraph cluster_e9 {
+        graph [style=rounded, bgcolor="#00ced172", penwidth=8, color=green3];
+        edge [penwidth=1, dir=none];
+        label = "Edge 9";
+        e9 [style=invis];
+
+        "e9_1" [label="1", color=gray];
+        "e9_2" [label="2"];
+        "e9_3" [label="3"];
+        "e9_4" [label="4"];
+        "e9_5" [label="5", style=invis];
+        "e9_6" [label="6", style=invis];
+        "e9_7" [label="7", style=invis];
+
+        "e9_1" -> "e9_2";
+        "e9_1" -> "e9_5" [style=invis];
+        "e9_2" -> "e9_3";
+        "e9_2" -> "e9_4";
+        "e9_6" -> "e9_7" [style=invis];
+    }
+
+    subgraph cluster_b11 {
+        graph [style=rounded, bgcolor="#ff8c00b2", penwidth=8, color=green3];
+        edge [penwidth=1, dir=none];
+        label = "Bag 11";
+        b11 [style=invis];
+
+        "b11_1" [label="1", color=gray];
+        "b11_2" [label="2", color=darkgreen];
+        "b11_3" [label="3"];
+        "b11_4" [label="4"];
+        "b11_5" [label="5", style=invis];
+        "b11_6" [label="6", style=invis];
+        "b11_7" [label="7", style=invis];
+
+        "b11_1" -> "b11_2";
+        "b11_1" -> "b11_5" [style=invis];
+        "b11_2" -> "b11_3";
+        "b11_2" -> "b11_4";
+        "b11_6" -> "b11_7" [style=invis];
+    }
+
+    subgraph cluster_e14 {
+        graph [style=rounded, bgcolor="#00ced172", penwidth=8, color=green3];
+        edge [penwidth=1, dir=none];
+        label = "Edge 14";
+        e14 [style=invis];
+
+        "e14_1" [label="1", style=invis];
+        "e14_2" [label="2", color=gray];
+        "e14_3" [label="3", style=invis];
+        "e14_4" [label="4"];
+        "e14_5" [label="5", style=invis];
+        "e14_6" [label="6", style=invis];
+        "e14_7" [label="7", style=invis];
+
+        "e14_1" -> "e14_2" [style=invis];
+        "e14_1" -> "e14_5" [style=invis];
+        "e14_2" -> "e14_3" [style=invis];
+        "e14_2" -> "e14_4";
+        "e14_6" -> "e14_7" [style=invis];
+    }
+
+    subgraph cluster_b16 {
+        graph [style=rounded, bgcolor="#ff8c00b2", penwidth=8, color=green3];
+        edge [penwidth=1, dir=none];
+        label = "Bag 16";
+        b16 [style=invis];
+
+        "b16_1" [label="1", style=invis];
+        "b16_2" [label="2", color=gray];
+        "b16_3" [label="3", style=invis];
+        "b16_4" [label="4", color=darkgreen];
+        "b16_5" [label="5", style=invis];
+        "b16_6" [label="6", style=invis];
+        "b16_7" [label="7", style=invis];
+
+        "b16_1" -> "b16_2" [style=invis];
+        "b16_1" -> "b16_5" [style=invis];
+        "b16_2" -> "b16_3" [style=invis];
+        "b16_2" -> "b16_4";
+        "b16_6" -> "b16_7" [style=invis];
+    }
+
+    subgraph cluster_e15 {
+        graph [style=rounded, bgcolor="#00ced172", penwidth=8, color=green3];
+        edge [penwidth=1, dir=none];
+        label = "Edge 15";
+        e15 [style=invis];
+
+        "e15_1" [label="1", style=invis];
+        "e15_2" [label="2", color=gray];
+        "e15_3" [label="3"];
+        "e15_4" [label="4", style=invis];
+        "e15_5" [label="5", style=invis];
+        "e15_6" [label="6", style=invis];
+        "e15_7" [label="7", style=invis];
+
+        "e15_1" -> "e15_2" [style=invis];
+        "e15_1" -> "e15_5" [style=invis];
+        "e15_2" -> "e15_3";
+        "e15_2" -> "e15_4" [style=invis];
+        "e15_6" -> "e15_7" [style=invis];
+    }
+
+    subgraph cluster_b17 {
+        graph [style=rounded, bgcolor="#ff8c00b2", penwidth=8, color=green3];
+        edge [penwidth=1, dir=none];
+        label = "Bag 17";
+        b17 [style=invis];
+
+        "b17_1" [label="1", style=invis];
+        "b17_2" [label="2", color=gray];
+        "b17_3" [label="3", color=darkgreen];
+        "b17_4" [label="4", style=invis];
+        "b17_5" [label="5", style=invis];
+        "b17_6" [label="6", style=invis];
+        "b17_7" [label="7", style=invis];
+
+        "b17_1" -> "b17_2" [style=invis];
+        "b17_1" -> "b17_5" [style=invis];
+        "b17_2" -> "b17_3";
+        "b17_2" -> "b17_4" [style=invis];
+        "b17_6" -> "b17_7" [style=invis];
+    }
+
+    subgraph cluster_b12 {
+        graph [style=rounded, bgcolor="#ff8c00b2", penwidth=8, color=green3];
+        edge [penwidth=1, dir=none];
+        label = "Bag 12";
+        b12 [style=invis];
+
+        "b12_1" [label="1", color=gray];
+        "b12_2" [label="2"];
+        "b12_3" [label="3"];
+        "b12_4" [label="4", color=darkgreen];
+        "b12_5" [label="5", style=invis];
+        "b12_6" [label="6", style=invis];
+        "b12_7" [label="7", style=invis];
+
+        "b12_1" -> "b12_2";
+        "b12_1" -> "b12_5" [style=invis];
+        "b12_2" -> "b12_3";
+        "b12_2" -> "b12_4";
+        "b12_6" -> "b12_7" [style=invis];
+    }
+
+    subgraph cluster_b13 {
+        graph [style=rounded, bgcolor="#ff8c00b2", penwidth=8, color=green3];
+        edge [penwidth=1, dir=none];
+        label = "Bag 13";
+        b13 [style=invis];
+
+        "b13_1" [label="1", color=gray];
+        "b13_2" [label="2"];
+        "b13_3" [label="3", color=darkgreen];
+        "b13_4" [label="4"];
+        "b13_5" [label="5", style=invis];
+        "b13_6" [label="6", style=invis];
+        "b13_7" [label="7", style=invis];
+
+        "b13_1" -> "b13_2";
+        "b13_1" -> "b13_5" [style=invis];
+        "b13_2" -> "b13_3";
+        "b13_2" -> "b13_4";
+        "b13_6" -> "b13_7" [style=invis];
+    }
+
+    subgraph cluster_b4 {
+        graph [style=rounded, bgcolor="#ff8c00b2", penwidth=8, color=green3];
+        edge [penwidth=1, dir=none];
+        label = "Bag 4";
+        b4 [style=invis];
+
+        "b4_1" [label="1"];
+        "b4_2" [label="2"];
+        "b4_3" [label="3"];
+        "b4_4" [label="4"];
+        "b4_5" [label="5", color=darkgreen];
+        "b4_6" [label="6", style=invis];
+        "b4_7" [label="7", style=invis];
+
+        "b4_1" -> "b4_2";
+        "b4_1" -> "b4_5";
+        "b4_2" -> "b4_3";
+        "b4_2" -> "b4_4";
+        "b4_6" -> "b4_7" [style=invis];
+    }
+
+    subgraph cluster_b5 {
+        graph [style=rounded, bgcolor="#ff8c00b2", penwidth=8, color=green3];
+        edge [penwidth=1, dir=none];
+        label = "Bag 5";
+        b5 [style=invis];
+
+        "b5_1" [label="1"];
+        "b5_2" [label="2", color=darkgreen];
+        "b5_3" [label="3"];
+        "b5_4" [label="4"];
+        "b5_5" [label="5"];
+        "b5_6" [label="6", style=invis];
+        "b5_7" [label="7", style=invis];
+
+        "b5_1" -> "b5_2";
+        "b5_1" -> "b5_5";
+        "b5_2" -> "b5_3";
+        "b5_2" -> "b5_4";
+        "b5_6" -> "b5_7" [style=invis];
+    }
+
+    subgraph cluster_b6 {
+        graph [style=rounded, bgcolor="#ff8c00b2", penwidth=8, color=green3];
+        edge [penwidth=1, dir=none];
+        label = "Bag 6";
+        b6 [style=invis];
+
+        "b6_1" [label="1"];
+        "b6_2" [label="2"];
+        "b6_3" [label="3"];
+        "b6_4" [label="4", color=darkgreen];
+        "b6_5" [label="5"];
+        "b6_6" [label="6", style=invis];
+        "b6_7" [label="7", style=invis];
+
+        "b6_1" -> "b6_2";
+        "b6_1" -> "b6_5";
+        "b6_2" -> "b6_3";
+        "b6_2" -> "b6_4";
+        "b6_6" -> "b6_7" [style=invis];
+    }
+
+    subgraph cluster_b7 {
+        graph [style=rounded, bgcolor="#ff8c00b2", penwidth=8, color=green3];
+        edge [penwidth=1, dir=none];
+        label = "Bag 7";
+        b7 [style=invis];
+
+        "b7_1" [label="1"];
+        "b7_2" [label="2"];
+        "b7_3" [label="3", color=darkgreen];
+        "b7_4" [label="4"];
+        "b7_5" [label="5"];
+        "b7_6" [label="6", style=invis];
+        "b7_7" [label="7", style=invis];
+
+        "b7_1" -> "b7_2";
+        "b7_1" -> "b7_5";
+        "b7_2" -> "b7_3";
+        "b7_2" -> "b7_4";
+        "b7_6" -> "b7_7" [style=invis];
+    }
+
+    subgraph cluster_e2 {
+        graph [style=rounded, bgcolor="#00ced172", penwidth=8, color=green3];
+        edge [penwidth=1, dir=none];
+        label = "Edge 2";
+        e2 [style=invis];
+
+        "e2_1" [label="1", style=invis];
+        "e2_2" [label="2", style=invis];
+        "e2_3" [label="3", style=invis];
+        "e2_4" [label="4", style=invis];
+        "e2_5" [label="5", style=invis];
+        "e2_6" [label="6"];
+        "e2_7" [label="7"];
+
+        "e2_1" -> "e2_2" [style=invis];
+        "e2_1" -> "e2_5" [style=invis];
+        "e2_2" -> "e2_3" [style=invis];
+        "e2_2" -> "e2_4" [style=invis];
+        "e2_6" -> "e2_7";
+    }
+
+    subgraph cluster_b18 {
+        graph [style=rounded, bgcolor="#ff8c00b2", penwidth=8, color=green3];
+        edge [penwidth=1, dir=none];
+        label = "Bag 18";
+        b18 [style=invis];
+
+        "b18_1" [label="1", style=invis];
+        "b18_2" [label="2", style=invis];
+        "b18_3" [label="3", style=invis];
+        "b18_4" [label="4", style=invis];
+        "b18_5" [label="5", style=invis];
+        "b18_6" [label="6", color=darkgreen];
+        "b18_7" [label="7"];
+
+        "b18_1" -> "b18_2" [style=invis];
+        "b18_1" -> "b18_5" [style=invis];
+        "b18_2" -> "b18_3" [style=invis];
+        "b18_2" -> "b18_4" [style=invis];
+        "b18_6" -> "b18_7";
+    }
+
+    subgraph cluster_e20 {
+        graph [style=rounded, bgcolor="#00ced172", penwidth=8, color=green3];
+        edge [penwidth=1, dir=none];
+        label = "Edge 20";
+        e20 [style=invis];
+
+        "e20_1" [label="1", style=invis];
+        "e20_2" [label="2", style=invis];
+        "e20_3" [label="3", style=invis];
+        "e20_4" [label="4", style=invis];
+        "e20_5" [label="5", style=invis];
+        "e20_6" [label="6", color=gray];
+        "e20_7" [label="7"];
+
+        "e20_1" -> "e20_2" [style=invis];
+        "e20_1" -> "e20_5" [style=invis];
+        "e20_2" -> "e20_3" [style=invis];
+        "e20_2" -> "e20_4" [style=invis];
+        "e20_6" -> "e20_7";
+    }
+
+    subgraph cluster_b21 {
+        graph [style=rounded, bgcolor="#ff8c00b2", penwidth=8, color=green3];
+        edge [penwidth=1, dir=none];
+        label = "Bag 21";
+        b21 [style=invis];
+
+        "b21_1" [label="1", style=invis];
+        "b21_2" [label="2", style=invis];
+        "b21_3" [label="3", style=invis];
+        "b21_4" [label="4", style=invis];
+        "b21_5" [label="5", style=invis];
+        "b21_6" [label="6", color=gray];
+        "b21_7" [label="7", color=darkgreen];
+
+        "b21_1" -> "b21_2" [style=invis];
+        "b21_1" -> "b21_5" [style=invis];
+        "b21_2" -> "b21_3" [style=invis];
+        "b21_2" -> "b21_4" [style=invis];
+        "b21_6" -> "b21_7";
+    }
+
+    subgraph cluster_b19 {
+        graph [style=rounded, bgcolor="#ff8c00b2", penwidth=8, color=green3];
+        edge [penwidth=1, dir=none];
+        label = "Bag 19";
+        b19 [style=invis];
+
+        "b19_1" [label="1", style=invis];
+        "b19_2" [label="2", style=invis];
+        "b19_3" [label="3", style=invis];
+        "b19_4" [label="4", style=invis];
+        "b19_5" [label="5", style=invis];
+        "b19_6" [label="6"];
+        "b19_7" [label="7", color=darkgreen];
+
+        "b19_1" -> "b19_2" [style=invis];
+        "b19_1" -> "b19_5" [style=invis];
+        "b19_2" -> "b19_3" [style=invis];
+        "b19_2" -> "b19_4" [style=invis];
+        "b19_6" -> "b19_7";
+    }
+
+    b0 -> e1 [ltail=cluster_b0, lhead=cluster_e1];
+    b0 -> e2 [ltail=cluster_b0, lhead=cluster_e2];
+
+    e2 -> b18 [ltail=cluster_e2, lhead=cluster_b18];
+    b18 -> e20 [ltail=cluster_b18, lhead=cluster_e20];
+    e20 -> b21 [ltail=cluster_e20, lhead=cluster_b21];
+
+    e2 -> b19 [ltail=cluster_e2, lhead=cluster_b19];
+
+    e1 -> b3 [ltail=cluster_e1, lhead=cluster_b3];
+    e1 -> b4 [ltail=cluster_e1, lhead=cluster_b4];
+    e1 -> b5 [ltail=cluster_e1, lhead=cluster_b5];
+    e1 -> b6 [ltail=cluster_e1, lhead=cluster_b6];
+    e1 -> b7 [ltail=cluster_e1, lhead=cluster_b7];
+
+    b3 -> e8 [ltail=cluster_b3, lhead=cluster_e8];
+    b3 -> e9 [ltail=cluster_b3, lhead=cluster_e9];
+
+    e8 -> b10 [ltail=cluster_e8, lhead=cluster_b10];
+
+    e9 -> b11 [ltail=cluster_e9, lhead=cluster_b11, color=red];
+    e9 -> b12 [ltail=cluster_e9, lhead=cluster_b12];
+    e9 -> b13 [ltail=cluster_e9, lhead=cluster_b13];
+
+    b11 -> e14 [ltail=cluster_b11, lhead=cluster_e14];
+    b11 -> e15 [ltail=cluster_b11, lhead=cluster_e15];
+
+    e14 -> b16 [ltail=cluster_e14, lhead=cluster_b16];
+    e15 -> b17 [ltail=cluster_e15, lhead=cluster_b17];
+}
