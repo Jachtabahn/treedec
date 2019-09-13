@@ -70,6 +70,13 @@ class SearchTree:
         self.num_nodes = 1
 
     def delete(self, node):
+        if node not in self.successors: return
+        deletable_successors = self.successors[node] if self.successors[node] is not None else []
+        for succ in deletable_successors:
+            self.delete(succ)
+
+        pred = self.predecessor[node]
+        self.successors[pred].remove(node)
         del self.predecessor[node]
         del self.subgraph[node]
         del self.successors[node]
@@ -202,10 +209,7 @@ def compute_tree_decomposition(split_graph, maximum_bag_size):
 
                 # clear memory
                 for failed_edge in search_tree.successors[pred]:
-                    failed_bags = search_tree.successors[failed_edge]
-                    if failed_bags is None: continue
-                    for failed_bag in failed_bags:
-                        search_tree.delete(failed_bag)
+                    search_tree.delete(failed_edge)
 
                 search_tree.set_status(node, STATUS_FAILED)
                 search_tree.mark_processed(pred, node)
