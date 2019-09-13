@@ -40,6 +40,21 @@ class Graph:
                 elif node not in self.adjacent[neigh]:
                     self.adjacent[neigh].append(node)
 
+    def dot_string(self, node_prefix):
+        s = ''
+        for node in self.nodes():
+            color = ''
+            if node == self.new_cop:
+                color = ', color=darkgreen'
+            elif node in self.cops:
+                color = ', color=gray'
+            s += f'{node_prefix}n{node} [label={node}{color}]\n'
+
+        for node, neighbours in self.adjacent.items():
+            for neigh in neighbours:
+                s += f'{node_prefix}n{node} -> {node_prefix}n{neigh}\n'
+        return s
+
     def __str__(self):
         s = '----------- Graph -----------\n'
         for n, a in self.adjacent.items():

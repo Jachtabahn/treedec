@@ -219,6 +219,8 @@ if __name__ == '__main__':
     G.make_symmetric()
     k = 2
 
+    print(f'The dot string for the input graph is\n{G.dot_string("b0")}')
+
     logging.info(f'We want a tree decomposition of width {k-1} for the following graph:\n{G}')
     search_tree, success = compute_tree_decomposition(G, k)
     if success:
