@@ -29,6 +29,9 @@ class SearchTree:
 
         pred = self.predecessor[node]
         self.successors[pred].remove(node)
+        if self.chosen_successor[pred] == node:
+            self.chosen_successor[pred] = None
+
         del self.predecessor[node]
         del self.subgraph[node]
         del self.successors[node]
