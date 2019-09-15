@@ -71,6 +71,51 @@ class SearchTree:
     def nodes(self):
         return list(self.successors.keys())
 
+    def dot_string(self):
+        s = 'digraph {\n'
+        s += 'graph [compound=true, ranksep=1, nodesep=1]\n'
+        s += 'edge [penwidth=3]\n'
+        s += 'node [style=filled, color=aliceblue]\n'
+
+        edge_color = '#00ced172'
+        bag_color = '#ff8c00b2'
+        status_color = {
+            STATUS_UNKNOWN: 'gray',
+            STATUS_FAILED: 'crimson',
+            STATUS_SUCCESS: 'green3'
+        }
+        root_graph = self.subgraph[self.get_root()]
+        for node, node_subgraph in self.subgraph.items():
+            is_bag_node = self.is_bag[node]
+            color = bag_color if is_bag_node else edge_color
+            node_name = f'b{node}' if is_bag_node else f'e{node}'
+            node_label = f'Bag {node}' if is_bag_node else f'Edge {node}'
+
+            s += f'subgraph cluster_{node_name} '
+            s += '{\n'
+            s += f'graph [label="{node_label}", style=rounded, '
+            node_status = self.status[node]
+            s += f'bgcolor="{color}", penwidth=8, color={status_color[node_status]}]\n'
+            s += 'edge [penwidth=1, dir=none]\n'
+            s += f'{node_name} [style=invis]\n'
+            subgraph_string = node_subgraph.dot_string(node_name, root_graph)
+            s += subgraph_string
+            s += '}\n'
+
+        chosen_color = 'red'
+        for node, pred in self.predecessor.items():
+            if pred is None: continue
+
+            node_name = f'b{node}' if self.is_bag[node] else f'e{node}'
+            pred_name = f'b{pred}' if self.is_bag[pred] else f'e{pred}'
+            color = f', color={chosen_color}' if self.chosen_successor[pred] == node else ''
+
+            s += f'{pred_name} -> {node_name} [ltail=cluster_{pred_name}, '
+            s += f'lhead=cluster_{node_name}{color}]\n'
+
+        s += '}'
+        return s
+
     def edges_string(self):
         s = ''
         for node in self.nodes():
@@ -219,15 +264,15 @@ if __name__ == '__main__':
     G.make_symmetric()
     k = 2
 
-    print(f'The dot string for the input graph is\n{G.dot_string("b0")}')
-
     logging.info(f'We want a tree decomposition of width {k-1} for the following graph:\n{G}')
     search_tree, success = compute_tree_decomposition(G, k)
     if success:
         logging.info('Successfully computed a tree decomposition.')
+        logging.debug(search_tree.edges_string())
+        logging.debug(str(search_tree))
     else:
         logging.error('Failed computing a tree decomposition.')
-        exit(1)
 
-    logging.debug(search_tree.edges_string())
-    logging.debug(str(search_tree))
+    tree_dot_string = search_tree.dot_string()
+    with open('generated.dot', 'w') as f:
+        print(tree_dot_string, file=f)
