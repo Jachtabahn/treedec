@@ -40,19 +40,33 @@ class Graph:
                 elif node not in self.adjacent[neigh]:
                     self.adjacent[neigh].append(node)
 
-    def dot_string(self, node_prefix):
+    def dot_string(self, node_prefix, supergraph):
         s = ''
-        for node in self.nodes():
-            color = ''
-            if node == self.new_cop:
-                color = ', color=darkgreen'
-            elif node in self.cops:
-                color = ', color=gray'
-            s += f'{node_prefix}n{node} [label={node}{color}]\n'
+        for node in supergraph.nodes():
+            if node in self.nodes():
+                if node == self.new_cop:
+                    color = ', color=darkgreen'
+                elif node in self.cops:
+                    color = ', color=gray'
+                else:
+                    color = ''
+                s += f'{node_prefix}n{node} [label={node}{color}]\n'
+            else:
+                s += f'{node_prefix}n{node} [label={node}, style=invis]\n'
 
-        for node, neighbours in self.adjacent.items():
+        # construct a list of edges with only one direction for each edge
+        edges = []
+        for node, neighbours in supergraph.adjacent.items():
             for neigh in neighbours:
-                s += f'{node_prefix}n{node} -> {node_prefix}n{neigh}\n'
+                if (neigh, node) not in edges:
+                    edges.append((node, neigh))
+
+        for tail, head in edges:
+            if tail not in self.nodes() or head not in self.nodes():
+                style = ' [style=invis]'
+            else:
+                style = ''
+            s += f'{node_prefix}n{tail} -> {node_prefix}n{head}{style}\n'
         return s
 
     def __str__(self):
