@@ -110,7 +110,7 @@ def decompose_into_connected_components(graph):
         current_component = Graph()
         while worklist:
             next_node = worklist.pop()
-            if next_node in current_component.nodes():
+            if next_node in current_component.adjacent.keys():
                 continue
             neighbours = list(graph.adjacent[next_node])
             is_cop = graph.is_cop(next_node)
