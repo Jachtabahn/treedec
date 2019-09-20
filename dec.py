@@ -5,6 +5,83 @@ from sys import argv
 
 logging.basicConfig(format='%(message)s', level=logging.DEBUG)
 
+NONE = 0
+UNCONNECTED = 1
+
+num_bags = 0
+class TreeDecomposition:
+
+    def __init__(self, bag_content, tree_id, children):
+        self.bag_content = bag_content
+        self.tree_id = tree_id
+        self.children = children
+
+        global num_bags
+        num_bags += 1
+        self.id = num_bags
+
+    def check_subtree(self, vertex):
+        pass
+
+    def extract_subtree(self, vertex):
+        subtrees = []
+        for child in self.children:
+            subtree = child.extract_subtree()
+            if subtree not in [NONE, UNCONNECTED]:
+                subtrees.append(subtree)
+
+        if vertex not in self.bag_content:
+            if len(subtrees) == 0:
+                logging.error(f'Vertex {vertex} has no bag in the subtree under {self.id}')
+                return NONE
+            if len(subtrees) >= 2:
+                logging.error(f'Vertex {vertex} has two unconnected bags in the two disjoint subtrees {[subtree.id for subtree in subtrees]}')
+                return UNCONNECTED
+            return subtrees[0]
+        else:
+            subtree = TreeDecomposition(self.bag_content, self.tree_id, subtrees)
+            return subtree
+
+    def validate(self, graph):
+        subtrees = dict()
+        for vertex in graph.adjacent:
+            # compute connected components of all the bags containing 'vertex'
+            components = self.extract_subtree(vertex)
+
+            # there should be exactly one such component
+            if len(components) == 0:
+                logging.error(f'Vertex {vertex} has no bags')
+                return False
+            if len(components) > 1:
+                logging.error(f'Vertex {vertex} has two unconnected bags')
+                return False
+
+            subtrees[vertex] = components[0]
+
+        # check that all edges are bagged
+        for vertex, neighbours in graph.adjacent.items():
+            subtree = subtrees[vertex]
+
+            for neigh in neighbours:
+                neigh_subtree = subtrees[neigh]
+                share_bag = False
+                for bag in subtree:
+                    if bag in neigh_subtree:
+                        share_bag = True
+                        logging.debug(f'The edge between vertices {vertex} and {neigh} is covered by the bag {bag}')
+                        break
+                if not share_bag:
+                    logging.error(f'The edge between vertices {vertex} and {neigh} is not covered')
+                    return False
+        return True
+
+    def __str__(self):
+        s = ''
+        for child in self.children:
+            s += str(child)
+        s += f'Bag {self.tree_id}, indexed {self.id}, contains the vertices {self.bag_content}\n'
+        return s
+
 UNKNOWN = 0
 FAILED = 1
 SUCCESS = 2
@@ -26,11 +103,38 @@ class DecompositionNode:
         num_nodes += 1
         self.id = num_nodes
 
+    def delete(self):
+        for succ in self.successors:
+            succ.delete()
+
+        pred = self.predecessor
+        pred.successors.remove(self)
+        if self is pred.strategy:
+            pred.strategy = None
+        self.predecessor = None
+
+        del self
+
     def add_child(self, child):
         self.successors.append(child)
 
     def set_status(self, new_status):
         self.status = new_status
+
+    def decompose_subgraph(self):
+        assert self.is_bag
+        components = decompose_into_connected_components(self.subgraph)
+        for comp in components:
+            child = DecompositionNode(pred=self, labelled_subgraph=comp, is_bag=False)
+            self.add_child(child)
+
+    def extract_tree_decomposition(self):
+        children = []
+        for succ in self.successors:
+            child_decomposition = succ.extract_tree_decomposition()
+            children.append(child_decomposition)
+        tree_decomposition = TreeDecomposition(self.subgraph.cops, self.id, children)
+        return tree_decomposition
 
     def dot_subgraphs(self):
         s = ''
@@ -111,6 +215,7 @@ def compute_tree_decomposition(split_graph, maximum_bag_size):
     global root_graph
     root_graph = split_graph
     node = DecompositionNode(pred=None, labelled_subgraph=split_graph, is_bag=True)
+    node.decompose_subgraph()
     while 1:
         if node.is_bag:
             bag = node
@@ -125,6 +230,8 @@ def compute_tree_decomposition(split_graph, maximum_bag_size):
             if bag.status == FAILED:
                 if bag.predecessor is None: return bag, False
                 node = bag.predecessor
+                for edge in bag.successors:
+                    edge.delete()
                 continue
 
             unknown_bag_edges = [edge for edge in bag.successors if edge.status == UNKNOWN]
@@ -160,16 +267,11 @@ def compute_tree_decomposition(split_graph, maximum_bag_size):
                 cop = choosable_cops[index]
                 split_subgraph = edge.subgraph.copy()
                 split_subgraph.place(cop)
-                bag_child = DecompositionNode(pred=edge, labelled_subgraph=split_subgraph, is_bag=True)
+                child = DecompositionNode(pred=edge, labelled_subgraph=split_subgraph, is_bag=True)
+                child.decompose_subgraph()
+                edge.add_child(child)
 
-                # decompose that new child into its components, that is, create its children
-                components = decompose_into_connected_components(split_subgraph)
-                for comp in components:
-                    edge_child = DecompositionNode(pred=bag_child, labelled_subgraph=comp, is_bag=False)
-                    bag_child.add_child(edge_child)
-
-                edge.add_child(bag_child)
-                node = bag_child
+                node = child
             else:
                 edge.set_status(FAILED)
                 node = edge.predecessor
@@ -232,3 +334,7 @@ if __name__ == '__main__':
     tree_dot_string = search_tree.dot_string()
     with open(dot_filepath, 'w') as f:
         print(tree_dot_string, file=f)
+
+    tree_decomposition = search_tree.extract_tree_decomposition()
+    logging.debug('Following tree decomposition has been found')
+    logging.debug(str(tree_decomposition))
