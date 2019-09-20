@@ -7,22 +7,22 @@ class Graph:
         self.cops = cops if cops is not None else []
         self.new_cop = None
 
-    def nodes(self):
+    def vertices(self):
         return list(self.adjacent.keys())
 
     def copy(self):
         copied_adjacent = dict()
-        for node, neighbours in self.adjacent.items():
-            copied_adjacent[node] = list(neighbours)
+        for vertex, neighbours in self.adjacent.items():
+            copied_adjacent[vertex] = list(neighbours)
         copied = Graph(copied_adjacent, list(self.cops))
         return copied
 
-    def add(self, node, neighbours, is_cop):
-        assert node not in self.adjacent
-        self.adjacent[node] = neighbours
+    def add(self, vertex, neighbours, is_cop):
+        assert vertex not in self.adjacent
+        self.adjacent[vertex] = neighbours
         if is_cop:
-            assert node not in self.cops
-            self.cops.append(node)
+            assert vertex not in self.cops
+            self.cops.append(vertex)
 
     def place(self, n):
         if n not in self.cops:
@@ -33,36 +33,36 @@ class Graph:
         return n in self.cops
 
     def make_symmetric(self):
-        for node, neighbours in list(self.adjacent.items()):
+        for vertex, neighbours in list(self.adjacent.items()):
             for neigh in neighbours:
                 if neigh not in self.adjacent:
-                    self.adjacent[neigh] = [node]
-                elif node not in self.adjacent[neigh]:
-                    self.adjacent[neigh].append(node)
+                    self.adjacent[neigh] = [vertex]
+                elif vertex not in self.adjacent[neigh]:
+                    self.adjacent[neigh].append(vertex)
 
     def dot_string(self, node_prefix, supergraph):
         s = ''
-        for node in supergraph.nodes():
-            if node in self.nodes():
-                if node == self.new_cop:
+        for vertex in supergraph.vertices():
+            if vertex in self.vertices():
+                if vertex == self.new_cop:
                     color = ', color=darkgreen'
-                elif node in self.cops:
+                elif vertex in self.cops:
                     color = ', color=gray'
                 else:
                     color = ''
-                s += f'{node_prefix}n{node} [label={node}{color}]\n'
+                s += f'{node_prefix}n{vertex} [label={vertex}{color}]\n'
             else:
-                s += f'{node_prefix}n{node} [label={node}, style=invis]\n'
+                s += f'{node_prefix}n{vertex} [label={vertex}, style=invis]\n'
 
         # construct a list of edges with only one direction for each edge
         edges = []
-        for node, neighbours in supergraph.adjacent.items():
+        for vertex, neighbours in supergraph.adjacent.items():
             for neigh in neighbours:
-                if (neigh, node) not in edges:
-                    edges.append((node, neigh))
+                if (neigh, vertex) not in edges:
+                    edges.append((vertex, neigh))
 
         for tail, head in edges:
-            if tail not in self.nodes() or head not in self.nodes():
+            if tail not in self.vertices() or head not in self.vertices():
                 style = ' [style=invis]'
             else:
                 style = ''
@@ -79,24 +79,24 @@ class Graph:
         return s
 
 '''
-    Decomposes a given graph minus its cop nodes into connected subgraphs, where each subgraph still contains
-    those cops that surround it. So we take a graph, remove all the cop nodes and that gives us a copless subgraph.
+    Decomposes a given graph minus its cop vertices into connected subgraphs, where each subgraph still contains
+    those cops that surround it. So we take a graph, remove all the cop vertices and that gives us a copless subgraph.
     Then we decompose this copless graph into its connected mini subgraphs. Then we take each
     connected mini subgraph's vertices and induce with them another mini cop subgraph using all the vertices,
     including the cops, of the original graph. A list of these mini cop subgraphs is returned here.
 
-    In the returned list, every subgraph is non-empty and has at least one node that is not a cop.
+    In the returned list, every subgraph is non-empty and has at least one vertex that is not a cop.
 
     @param graph Graph to decompose into mini cop subgraphs
     @return List of graphs that are mini cop subgraphs of the given graph
 '''
 def decompose_into_connected_components(graph):
     def fresh_node(components, graph):
-        for n in graph.nodes():
+        for n in graph.vertices():
             if graph.is_cop(n): continue
             inside = False
             for comp in components:
-                if n in comp.nodes():
+                if n in comp.vertices():
                     inside = True
                     break
             if not inside:
