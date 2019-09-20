@@ -1,6 +1,7 @@
 from random import choice, seed
 import logging
 from graph import Graph, decompose_into_connected_components
+from sys import argv
 
 logging.basicConfig(format='%(message)s', level=logging.DEBUG)
 
@@ -243,32 +244,29 @@ def compute_choosable_cops(escape_component, maximum_bag_size):
             choosable.append(node)
     return choosable
 
+def parse_graph(filepath):
+    graph = Graph()
+    with open(filepath) as file:
+        for line in file:
+            if line[0] == 'c':
+                continue
+            if line[0] == 'p':
+                continue
+            edge = line.split(' ')
+            tail, head = int(edge[0]), int(edge[1])
+            if tail not in graph.adjacent:
+                graph.adjacent[tail] = []
+            graph.adjacent[tail].append(head)
+    return graph
+
 if __name__ == '__main__':
-    # non-trivial graph on 14 vertices
-    G = Graph({
-        0: [1, 2, 3],
-        1: [4, 5],
-        2: [6, 7],
-        3: [8, 9],
-        4: [10, 11],
-        5: [12, 13],
-        6: [10, 12],
-        7: [11, 13],
-        8: [10, 13],
-        9: [11, 12]
-    })
-
-    # trivial forest on 7 vertices
-    # G = Graph({
-    #     1: [2, 5],
-    #     2: [3, 4],
-    #     6: [7]
-    # })
+    treewidth = int(argv[1])
+    filepath = argv[2]
+    G = parse_graph(filepath)
     G.make_symmetric()
-    k = 2
 
-    logging.info(f'We want a tree decomposition of width {k-1} for the following graph:\n{G}')
-    search_tree, success = compute_tree_decomposition(G, k)
+    logging.info(f'We want a tree decomposition of width {treewidth} for the following graph:\n{G}')
+    search_tree, success = compute_tree_decomposition(G, treewidth+1)
     if success:
         logging.info('Successfully computed a tree decomposition.')
         logging.debug(search_tree.edges_string())
