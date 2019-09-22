@@ -40,6 +40,17 @@ class Graph:
                 elif vertex not in self.adjacent[neigh]:
                     self.adjacent[neigh].append(vertex)
 
+    '''
+        Constructs a list of edges with only one direction for each edge.
+    '''
+    def one_directional(self):
+        edges = []
+        for vertex, neighbours in self.adjacent.items():
+            for neigh in neighbours:
+                if (neigh, vertex) not in edges:
+                    edges.append((vertex, neigh))
+        return edges
+
     def dot_string(self, node_prefix, supergraph):
         s = ''
         for vertex in supergraph.vertices():
@@ -54,14 +65,7 @@ class Graph:
             else:
                 s += f'{node_prefix}n{vertex} [label={vertex}, style=invis]\n'
 
-        # construct a list of edges with only one direction for each edge
-        edges = []
-        for vertex, neighbours in supergraph.adjacent.items():
-            for neigh in neighbours:
-                if (neigh, vertex) not in edges:
-                    edges.append((vertex, neigh))
-
-        for tail, head in edges:
+        for tail, head in supergraph.one_directional():
             if tail not in self.vertices() or head not in self.vertices():
                 style = ' [style=invis]'
             else:
@@ -128,3 +132,18 @@ def show_connected_components(graph):
     logging.debug(f'There are {len(components)} connected components in the given graph')
     for i, comp in enumerate(components):
         logging.debug(f'Component #{i+1} is\n{comp}\n')
+
+def parse_graph(filepath):
+    graph = Graph()
+    with open(filepath) as file:
+        for line in file:
+            if line[0] == 'c':
+                continue
+            if line[0] == 'p':
+                continue
+            edge = line.split(' ')
+            tail, head = int(edge[0]), int(edge[1])
+            if tail not in graph.adjacent:
+                graph.adjacent[tail] = []
+            graph.adjacent[tail].append(head)
+    return graph
