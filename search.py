@@ -1,86 +1,9 @@
-from random import choice, seed
 import logging
-from graph import Graph, decompose_into_connected_components
+from graph import decompose_into_connected_components, parse_graph
 from sys import argv
+from tree_decomposition import TreeDecomposition
 
-logging.basicConfig(format='%(message)s', level=logging.DEBUG)
-
-NONE = 0
-UNCONNECTED = 1
-
-num_bags = 0
-class TreeDecomposition:
-
-    def __init__(self, bag_content, tree_id, children):
-        self.bag_content = bag_content
-        self.tree_id = tree_id
-        self.children = children
-
-        global num_bags
-        num_bags += 1
-        self.id = num_bags
-
-    def check_subtree(self, vertex):
-        pass
-
-    def extract_subtree(self, vertex):
-        subtrees = []
-        for child in self.children:
-            subtree = child.extract_subtree()
-            if subtree not in [NONE, UNCONNECTED]:
-                subtrees.append(subtree)
-
-        if vertex not in self.bag_content:
-            if len(subtrees) == 0:
-                logging.error(f'Vertex {vertex} has no bag in the subtree under {self.id}')
-                return NONE
-            if len(subtrees) >= 2:
-                logging.error(f'Vertex {vertex} has two unconnected bags in the two disjoint subtrees {[subtree.id for subtree in subtrees]}')
-                return UNCONNECTED
-            return subtrees[0]
-        else:
-            subtree = TreeDecomposition(self.bag_content, self.tree_id, subtrees)
-            return subtree
-
-    def validate(self, graph):
-        subtrees = dict()
-        for vertex in graph.adjacent:
-            # compute connected components of all the bags containing 'vertex'
-            components = self.extract_subtree(vertex)
-
-            # there should be exactly one such component
-            if len(components) == 0:
-                logging.error(f'Vertex {vertex} has no bags')
-                return False
-            if len(components) > 1:
-                logging.error(f'Vertex {vertex} has two unconnected bags')
-                return False
-
-            subtrees[vertex] = components[0]
-
-        # check that all edges are bagged
-        for vertex, neighbours in graph.adjacent.items():
-            subtree = subtrees[vertex]
-
-            for neigh in neighbours:
-                neigh_subtree = subtrees[neigh]
-                share_bag = False
-                for bag in subtree:
-                    if bag in neigh_subtree:
-                        share_bag = True
-                        logging.debug(f'The edge between vertices {vertex} and {neigh} is covered by the bag {bag}')
-                        break
-                if not share_bag:
-                    logging.error(f'The edge between vertices {vertex} and {neigh} is not covered')
-                    return False
-        return True
-
-    def __str__(self):
-        s = ''
-        for child in self.children:
-            s += str(child)
-        s += f'Bag {self.tree_id}, indexed {self.id}, contains the vertices {self.bag_content}\n'
-        return s
+logging.basicConfig(format='%(message)s', level=logging.INFO)
 
 UNKNOWN = 0
 FAILED = 1
@@ -129,6 +52,8 @@ class DecompositionNode:
             self.add_child(child)
 
     def extract_tree_decomposition(self):
+        if self.strategy is not None:
+            return self.strategy.extract_tree_decomposition()
         children = []
         for succ in self.successors:
             child_decomposition = succ.extract_tree_decomposition()
@@ -300,41 +225,29 @@ def compute_choosable_cops(escape_component, known_cops, maximum_bag_size):
             choosable.append(vertex)
     return choosable
 
-def parse_graph(filepath):
-    graph = Graph()
-    with open(filepath) as file:
-        for line in file:
-            if line[0] == 'c':
-                continue
-            if line[0] == 'p':
-                continue
-            edge = line.split(' ')
-            tail, head = int(edge[0]), int(edge[1])
-            if tail not in graph.adjacent:
-                graph.adjacent[tail] = []
-            graph.adjacent[tail].append(head)
-    return graph
+def search_for_tree_decomposition(tree_width, graph_path):
+    # parse input graph
+    input_graph = parse_graph(graph_path)
+    logging.info(f'I am looking for a tree decomposition of width <= {tree_width} for the graph:\n{input_graph}')
+    input_graph.make_symmetric()
+
+    # search for a tree decomposition
+    search_tree, success = compute_tree_decomposition(input_graph, tree_width+1)
+    if not success:
+        logging.error('I failed computing a tree decomposition.')
+        return None
+
+    # extract the found tree decomposition from the constructed search tree
+    tree_decomposition = search_tree.extract_tree_decomposition()
+    if not tree_decomposition.validate(input_graph):
+        logging.error('I computed an invalid tree decomposition.')
+        return None
+    logging.info(f'I found a valid tree decomposition of width at most {tree_width}.')
+    logging.debug(tree_decomposition)
+
+    with open(graph_path + '.td', 'w') as f:
+        tree_string = tree_decomposition.output_format()
+        f.write(tree_string)
 
 if __name__ == '__main__':
-    treewidth = int(argv[1])
-    filepath = argv[2]
-    dot_filepath = argv[3]
-    G = parse_graph(filepath)
-    G.make_symmetric()
-
-    logging.info(f'We want a tree decomposition of width {treewidth} for the following graph:\n{G}')
-    search_tree, success = compute_tree_decomposition(G, treewidth+1)
-    if success:
-        logging.info('Successfully computed a tree decomposition.')
-        logging.debug(str(search_tree))
-        logging.debug(search_tree.edges_string())
-    else:
-        logging.error('Failed computing a tree decomposition.')
-
-    tree_dot_string = search_tree.dot_string()
-    with open(dot_filepath, 'w') as f:
-        print(tree_dot_string, file=f)
-
-    tree_decomposition = search_tree.extract_tree_decomposition()
-    logging.debug('Following tree decomposition has been found')
-    logging.debug(str(tree_decomposition))
+    search_for_tree_decomposition(int(argv[1]), argv[2])
