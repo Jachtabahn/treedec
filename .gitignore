@@ -1,3 +1,6 @@
-*.td
-*.gr
-*.pyc
+solutions/*
+instances/*
+dot/*
+svg/*
+__pycache__/*
+
