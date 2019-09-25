@@ -10,6 +10,17 @@ FAILED = 1
 SUCCESS = 2
 
 num_nodes = 0
+
+'''
+    This is the root graph, that is decomposed into a tree. It's used in DecompositionNode.dot_nodes(), when inside
+    each cluster, I draw the entire graph and then blend out the parts I don't need, so that the subgraphs are
+    more comparable. But actually, this doesn't necessarily make them look similar, and it might still
+    happen, that some nodes or edges get drawn differently.
+
+    Additionally, drawing graphs inside the clusters breaks
+    the whole layout, and clusters and their edges are drawn chaotically. When the clusters are empty and
+    have no graphs inside them, the layout is a clean and beautiful tree.
+'''
 root_graph = None
 
 class DecompositionNode:
@@ -61,11 +72,18 @@ class DecompositionNode:
         tree_decomposition = TreeDecomposition(self.subgraph.cops, self.id, children)
         return tree_decomposition
 
-    def dot_subgraphs(self):
+    def dot_nodes(self):
         s = ''
         for child in self.successors:
-            s += child.dot_subgraphs()
+            s += child.dot_nodes()
 
+        node_name = f'b{self.id}' if self.is_bag else f'e{self.id}'
+        graph_dot = self.subgraph.dot_string(root_graph)
+        with open(f'dot/{node_name}.dot') as f:
+            f.write(graph_dot)
+
+        color = bag_color if self.is_bag else edge_color
+        node_label = f'Bag {self.id}' if self.is_bag else f'Edge {self.id}'
         edge_color = '#00ced172'
         bag_color = '#ff8c00b2'
         status_color = {
@@ -73,20 +91,6 @@ class DecompositionNode:
             FAILED: 'crimson',
             SUCCESS: 'green3'
         }
-
-        color = bag_color if self.is_bag else edge_color
-        node_name = f'b{self.id}' if self.is_bag else f'e{self.id}'
-        node_label = f'Bag {self.id}' if self.is_bag else f'Edge {self.id}'
-
-        s += f'subgraph cluster_{node_name} '
-        s += '{\n'
-        s += f'graph [label="{node_label}", style=rounded, '
-        s += f'bgcolor="{color}", penwidth=8, color={status_color[self.status]}]\n'
-        s += 'edge [penwidth=1, dir=none]\n'
-        s += f'{node_name} [style=invis]\n'
-        subgraph_string = self.subgraph.dot_string(node_name, root_graph)
-        s += subgraph_string
-        s += '}\n'
 
         if self.predecessor is not None:
             strategy_color = 'red'
@@ -104,7 +108,7 @@ class DecompositionNode:
         s += 'edge [penwidth=3]\n'
         s += 'node [style=filled, color=aliceblue]\n'
 
-        s += self.dot_subgraphs()
+        s += self.dot_nodes()
 
         s += '}'
         return s
@@ -237,6 +241,11 @@ def search_for_tree_decomposition(tree_width, graph_path):
         logging.error('I failed computing a tree decomposition.')
         return None
 
+    # save the computed search tree
+    with open(graph_path.replace('instances', 'dot') + '.dot', 'w') as f:
+        search_tree_string = search_tree.dot_string()
+        f.write(search_tree_string)
+
     # extract the found tree decomposition from the constructed search tree
     tree_decomposition = search_tree.extract_tree_decomposition()
     if not tree_decomposition.validate(input_graph):
@@ -245,7 +254,8 @@ def search_for_tree_decomposition(tree_width, graph_path):
     logging.info(f'I found a valid tree decomposition of width at most {tree_width}.')
     logging.debug(tree_decomposition)
 
-    with open(graph_path + '.td', 'w') as f:
+    # save the computed tree decomposition
+    with open(graph_path.replace('instances', 'solutions') + '.td', 'w') as f:
         tree_string = tree_decomposition.output_format()
         f.write(tree_string)
 

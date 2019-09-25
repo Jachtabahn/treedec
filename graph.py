@@ -51,8 +51,8 @@ class Graph:
                     edges.append((vertex, neigh))
         return edges
 
-    def dot_string(self, node_prefix, supergraph):
-        s = ''
+    def dot_string(self, supergraph):
+        s = 'graph {\n'
         for vertex in supergraph.vertices():
             if vertex in self.vertices():
                 if vertex == self.new_cop:
@@ -61,16 +61,17 @@ class Graph:
                     color = ', color=gray'
                 else:
                     color = ''
-                s += f'{node_prefix}n{vertex} [label={vertex}{color}]\n'
+                s += f'{vertex} [label={vertex}{color}]\n'
             else:
-                s += f'{node_prefix}n{vertex} [label={vertex}, style=invis]\n'
+                s += f'{vertex} [label={vertex}, style=invis]\n'
 
         for tail, head in supergraph.one_directional():
             if tail not in self.vertices() or head not in self.vertices():
                 style = ' [style=invis]'
             else:
                 style = ''
-            s += f'{node_prefix}n{tail} -> {node_prefix}n{head}{style}\n'
+            s += f'{tail} -- {head}{style}\n'
+        s += '}\n'
         return s
 
     def __str__(self):
