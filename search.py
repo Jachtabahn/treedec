@@ -245,9 +245,18 @@ def search_for_tree_decomposition(tree_width, graph_path):
     logging.info(f'I found a valid tree decomposition of width at most {tree_width}.')
     logging.debug(tree_decomposition)
 
-    with open(graph_path + '.td', 'w') as f:
+    # save the computed tree decomposition
+    with open(graph_path.replace('instances', 'solutions').replace('.gr', '.td'), 'w') as f:
         tree_string = tree_decomposition.output_format()
         f.write(tree_string)
 
+'''
+    Computes a tree decomposition of given tree width. The solution will be saved to a
+    path, where in the original graph path, 'instances' is
+    replaced with 'solutions', and '.gr' with '.td'.
+
+    @param argv[1] Desired tree width
+    @param argv[2] Path to a graph
+'''
 if __name__ == '__main__':
     search_for_tree_decomposition(int(argv[1]), argv[2])
