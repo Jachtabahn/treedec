@@ -72,30 +72,30 @@ class TreeDecomposition:
         return True
 
     def format(self, bag_id=1):
-        bags_string = 'b'
+        bags_string = f'b {bag_id}'
         for vertex in self.bag:
             bags_string += f' {vertex}'
         bags_string += '\n'
 
         num_bags = 1
-        tree_width = len(self.bag)-1
+        maximum_bag_size = len(self.bag)
         vertices = set(self.bag)
         edges_string = ''
         for i, child in enumerate(self.children):
             child_id = bag_id + i + 1
-            child_num_bags, child_tree_width, child_vertices, \
+            child_num_bags, child_maximum_bag_size, child_vertices, \
                 child_edges_string, child_string = child.format(child_id)
 
             num_bags += child_num_bags
-            tree_width = max(tree_width, child_tree_width)
+            maximum_bag_size = max(maximum_bag_size, child_maximum_bag_size)
             vertices = vertices.union(child_vertices)
             edges_string += f'{bag_id} {child_id}\n{child_edges_string}'
             bags_string += child_string
-        return num_bags, tree_width, vertices, edges_string, bags_string
+        return num_bags, maximum_bag_size, vertices, edges_string, bags_string
 
     def output_format(self):
-        num_bags, tree_width, vertices, edges_string, bags_string = self.format()
-        s = f's td {num_bags} {tree_width} {len(vertices)}\n'
+        num_bags, maximum_bag_size, vertices, edges_string, bags_string = self.format()
+        s = f's td {num_bags} {maximum_bag_size} {len(vertices)}\n'
         s += bags_string
         s += edges_string
         return s
