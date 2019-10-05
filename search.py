@@ -2,6 +2,7 @@ import logging
 from graph import decompose_into_connected_components, parse_graph
 from sys import argv
 from tree_decomposition import TreeDecomposition
+from os import path
 
 logging.basicConfig(format='%(message)s', level=logging.INFO)
 
@@ -79,26 +80,34 @@ class DecompositionNode:
 
         node_name = f'b{self.id}' if self.is_bag else f'e{self.id}'
         graph_dot = self.subgraph.dot_string(root_graph)
-        with open(f'dot/{node_name}.dot') as f:
+        graph_dot_path = f'dot/{node_name}.dot'
+        with open(, 'w') as f:
             f.write(graph_dot)
 
         color = bag_color if self.is_bag else edge_color
-        node_label = f'Bag {self.id}' if self.is_bag else f'Edge {self.id}'
-        edge_color = '#00ced172'
-        bag_color = '#ff8c00b2'
+        if self.is_bag:
+            node_color = '#ff8c00b2'
+            # node_label = f'Bag {self.id}'
+        else:
+            node_color = '#00ced172'
+            # node_label = f'Edge {self.id}'
         status_color = {
             UNKNOWN: 'gray',
             FAILED: 'crimson',
             SUCCESS: 'green3'
         }
 
+        graph_svg_path = graph_dot_path.replace('.dot', '.svg')
+        s += f'''{node_name} [label="", penwidth=6,
+        shape=rectangle,
+        color={status_color[self.status]},
+        fillcolor={node_color},
+        image={graph_svg_path}]'''
+
         if self.predecessor is not None:
-            strategy_color = 'red'
-            node_name = f'b{self.id}' if self.is_bag else f'e{self.id}'
             pred_name = f'b{self.predecessor.id}' if self.predecessor.is_bag else f'e{self.predecessor.id}'
-            color = f', color={strategy_color}' if self == self.predecessor.strategy else ''
-            s += f'{pred_name} -> {node_name} [ltail=cluster_{pred_name}, '
-            s += f'lhead=cluster_{node_name}{color}]\n'
+            # color = f', color=red' if self == self.predecessor.strategy else ''
+            s += f'{pred_name} -> {node_name}\n'
 
         return s
 
