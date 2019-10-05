@@ -1,3 +1,3 @@
 #!/bin/bash
 
-rm -f dot/* svg/*
+rm -f dot/* svg/* visualize-*
