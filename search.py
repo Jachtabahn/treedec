@@ -52,8 +52,8 @@ class DecompositionNode:
         assert self.is_bag
         components = graph.decompose_into_connected_components(self.subgraph)
         for comp in components:
-            child = DecompositionNode(pred=self, labelled_subgraph=comp, is_bag=False)
-            self.add_child(child)
+            edge_child = DecompositionNode(pred=self, labelled_subgraph=comp, is_bag=False)
+            self.add_child(edge_child)
 
     def extract_tree_decomposition(self):
         if self.strategy is not None:
@@ -82,15 +82,17 @@ class DecompositionNode:
 
         if self.is_bag:
             node_color = '#ff8c00b2'
+            node_label = f'Bag {self.id}'
         else:
             node_color = '#00ced172'
+            node_label = f'Edge {self.id}'
         status_color = {
             UNKNOWN: 'gray',
             FAILED: 'crimson',
             SUCCESS: 'green3'
         }
 
-        dot += f'{node_name} [label="", penwidth=6, '
+        dot += f'{node_name} [label="{node_label}", penwidth=6, '
         dot += 'shape=rectangle, '
         dot += f'color={status_color[self.status]}, '
         dot += f'fillcolor="{node_color}", '
@@ -203,11 +205,11 @@ def compute_tree_decomposition(split_graph, maximum_bag_size):
                 cop = choosable_cops[index]
                 split_subgraph = edge.subgraph.copy()
                 split_subgraph.place(cop)
-                child = DecompositionNode(pred=edge, labelled_subgraph=split_subgraph, is_bag=True)
-                child.decompose_subgraph()
-                edge.add_child(child)
+                bag_child = DecompositionNode(pred=edge, labelled_subgraph=split_subgraph, is_bag=True)
+                bag_child.decompose_subgraph()
+                edge.add_child(bag_child)
 
-                node = child
+                node = bag_child
             else:
                 edge.set_status(FAILED)
                 node = edge.predecessor
