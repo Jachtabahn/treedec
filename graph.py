@@ -53,6 +53,8 @@ class Graph:
 
     def dot_string(self, supergraph):
         s = 'graph {\n'
+        s += 'bgcolor=transparent\n'
+        s += 'node [style=filled, color=aliceblue]\n'
         for vertex in supergraph.vertices():
             if vertex in self.vertices():
                 if vertex == self.new_cop:
