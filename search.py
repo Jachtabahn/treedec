@@ -264,14 +264,6 @@ def search_for_tree_decomposition(maximum_bag_size, graph_path):
     # save the computed tree decomposition
     tree_decomposition.save(graph_name)
 
-'''
-    Computes a tree decomposition of given tree width. The solution will be saved to a
-    path, where in the original graph path, 'instances' is
-    replaced with 'solutions', and '.gr' with '.td'.
-
-    @param argv[1] Desired tree width
-    @param argv[2] Path to a graph
-'''
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--verbose', '-v', action='count')
