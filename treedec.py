@@ -93,12 +93,17 @@ class TreeDecomposition:
             bags_string += child_string
         return num_bags, maximum_bag_size, vertices, edges_string, bags_string
 
-    def output_format(self):
+    def save(self, graph_name):
         num_bags, maximum_bag_size, vertices, edges_string, bags_string = self.td_format()
-        s = f's td {num_bags} {maximum_bag_size} {len(vertices)}\n'
-        s += bags_string
-        s += edges_string
-        return s
+
+        treedec_string = f's td {num_bags} {maximum_bag_size} {len(vertices)}\n'
+        treedec_string += bags_string
+        treedec_string += edges_string
+
+        treedec_path = f'treedecs/{graph_name}.td'
+        with open(treedec_path, 'w') as f:
+            f.write(treedec_string)
+        return treedec_string
 
     def spaced_string(self, spaces=0):
         s = ''
@@ -109,7 +114,6 @@ class TreeDecomposition:
 
     def __str__(self):
         return self.spaced_string()
-
 
 def get_children(tree_id, parents, edges):
     children_ids = []
