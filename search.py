@@ -1,29 +1,21 @@
 import logging
-from graph import decompose_into_connected_components, parse_graph
-from sys import argv
-from tree_decomposition import TreeDecomposition
+import graph
+import treedec
+import argparse
 from os import path
-
-logging.basicConfig(format='%(message)s', level=logging.INFO)
 
 UNKNOWN = 0
 FAILED = 1
 SUCCESS = 2
 
-num_nodes = 0
-
 '''
-    This is the root graph, that is decomposed into a tree. It's used in DecompositionNode.dot_nodes(), when inside
-    each cluster, I draw the entire graph and then blend out the parts I don't need, so that the subgraphs are
-    more comparable. But actually, this doesn't necessarily make them look similar, and it might still
-    happen, that some nodes or edges get drawn differently.
-
-    Additionally, drawing graphs inside the clusters breaks
-    the whole layout, and clusters and their edges are drawn chaotically. When the clusters are empty and
-    have no graphs inside them, the layout is a clean and beautiful tree.
+    This is the root graph, that is decomposed into a tree. It's used in DecompositionNode.write_subgraph_dots(), when inside
+    each search tree node, I draw the entire graph and then blend out the parts I don't need, so that the subgraphs are
+    more comparable.
 '''
 root_graph = None
 
+num_nodes = 0
 class DecompositionNode:
 
     def __init__(self, pred, labelled_subgraph, is_bag):
@@ -58,7 +50,7 @@ class DecompositionNode:
 
     def decompose_subgraph(self):
         assert self.is_bag
-        components = decompose_into_connected_components(self.subgraph)
+        components = graph.decompose_into_connected_components(self.subgraph)
         for comp in components:
             child = DecompositionNode(pred=self, labelled_subgraph=comp, is_bag=False)
             self.add_child(child)
@@ -70,57 +62,63 @@ class DecompositionNode:
         for succ in self.successors:
             child_decomposition = succ.extract_tree_decomposition()
             children.append(child_decomposition)
-        tree_decomposition = TreeDecomposition(self.subgraph.cops, self.id, children)
+        tree_decomposition = treedec.TreeDecomposition(self.subgraph.cops, self.id, children)
         return tree_decomposition
 
-    def dot_nodes(self):
-        s = ''
+    def write_subgraph_dots(self):
+        dot = ''
+        shell = ''
         for child in self.successors:
-            s += child.dot_nodes()
+            child_dot, child_shell = child.write_subgraph_dots()
+            dot += child_dot
+            shell += child_shell
 
         node_name = f'b{self.id}' if self.is_bag else f'e{self.id}'
+        shell += f'dot -Tsvg -o svg/{node_name}.svg dot/{node_name}.dot\n'
         graph_dot = self.subgraph.dot_string(root_graph)
         graph_dot_path = f'dot/{node_name}.dot'
-        with open(, 'w') as f:
+        with open(graph_dot_path, 'w') as f:
             f.write(graph_dot)
 
-        color = bag_color if self.is_bag else edge_color
         if self.is_bag:
             node_color = '#ff8c00b2'
-            # node_label = f'Bag {self.id}'
         else:
             node_color = '#00ced172'
-            # node_label = f'Edge {self.id}'
         status_color = {
             UNKNOWN: 'gray',
             FAILED: 'crimson',
             SUCCESS: 'green3'
         }
 
-        graph_svg_path = graph_dot_path.replace('.dot', '.svg')
-        s += f'''{node_name} [label="", penwidth=6,
-        shape=rectangle,
-        color={status_color[self.status]},
-        fillcolor={node_color},
-        image={graph_svg_path}]'''
+        dot += f'{node_name} [label="", penwidth=6, '
+        dot += 'shape=rectangle, '
+        dot += f'color={status_color[self.status]}, '
+        dot += f'fillcolor="{node_color}", '
+        graph_svg_path = graph_dot_path.replace('dot', 'svg')
+        dot += f'image="{graph_svg_path}"]\n'
 
         if self.predecessor is not None:
             pred_name = f'b{self.predecessor.id}' if self.predecessor.is_bag else f'e{self.predecessor.id}'
-            # color = f', color=red' if self == self.predecessor.strategy else ''
-            s += f'{pred_name} -> {node_name}\n'
+            color = f' [color=green]' if self == self.predecessor.strategy else ''
+            dot += f'{pred_name} -> {node_name}{color}\n'
 
-        return s
+        return dot, shell
 
-    def dot_string(self):
-        s = 'digraph {\n'
-        s += 'graph [compound=true, ranksep=1, nodesep=1]\n'
-        s += 'edge [penwidth=3]\n'
-        s += 'node [style=filled, color=aliceblue]\n'
+    def write_dot(self, graph_name):
+        dot = 'digraph {\n'
+        dot += 'edge [penwidth=3]\n'
+        dot += 'node [style=filled, color=aliceblue]\n'
+        dot_nodes_string, shell = self.write_subgraph_dots()
+        dot += dot_nodes_string
+        dot += '}'
+        with open(f'dot/{graph_name}.dot', 'w') as f:
+            f.write(dot)
 
-        s += self.dot_nodes()
-
-        s += '}'
-        return s
+        shell += f'\ndot -Tsvg -o svg/{graph_name}.svg dot/{graph_name}.dot\n'
+        shell += f'inkscape svg/{graph_name}.svg\n'
+        with open(f'visualize-{graph_name}.sh', 'w') as f:
+            f.write(shell)
+        return dot
 
     def edges_string(self):
         s = ''
@@ -240,7 +238,7 @@ def compute_choosable_cops(escape_component, known_cops, maximum_bag_size):
 
 def search_for_tree_decomposition(maximum_bag_size, graph_path):
     # parse input graph
-    input_graph = parse_graph(graph_path)
+    input_graph = graph.parse_graph(graph_path)
     graph_dir, graph_name = path.split(graph_path)
     graph_name = graph_name.replace('.gr', '')
     logging.info(f'I am looking for a tree decomposition of width <= {maximum_bag_size-1} for the graph:\n{input_graph}')
@@ -253,10 +251,7 @@ def search_for_tree_decomposition(maximum_bag_size, graph_path):
         return None
 
     # save the computed search tree
-    search_dot_path = f'dot/{graph_name}.dot'
-    with open(search_dot_path, 'w') as f:
-        search_tree_string = search_tree.dot_string()
-        f.write(search_tree_string)
+    search_tree.write_dot(graph_name)
 
     # extract the found tree decomposition from the constructed search tree
     tree_decomposition = search_tree.extract_tree_decomposition()
@@ -267,10 +262,20 @@ def search_for_tree_decomposition(maximum_bag_size, graph_path):
     logging.debug(tree_decomposition)
 
     # save the computed tree decomposition
-    treedec_path = f'treedecs/{graph_name}.td'
-    with open(treedec_path, 'w') as f:
-        tree_string = tree_decomposition.output_format()
-        f.write(tree_string)
+    tree_decomposition.save(graph_name)
 
 if __name__ == '__main__':
-    search_for_tree_decomposition(int(argv[1]), argv[2])
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--verbose', '-v', action='count')
+    parser.add_argument('--maximum-bag-size', '-b', type=int)
+    parser.add_argument('--graph-path', '-g')
+    args = parser.parse_args()
+
+    log_levels = {
+        None: logging.WARNING,
+        1: logging.INFO,
+        2: logging.DEBUG
+    }
+    logging.basicConfig(format='%(message)s', level=log_levels[args.verbose])
+
+    search_for_tree_decomposition(args.maximum_bag_size, args.graph_path)
