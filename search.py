@@ -229,20 +229,23 @@ def compute_choosable_cops(escape_component, known_cops, maximum_bag_size):
             choosable.append(vertex)
     return choosable
 
-def search_for_tree_decomposition(tree_width, graph_path):
+def search_for_tree_decomposition(maximum_bag_size, graph_path):
     # parse input graph
     input_graph = parse_graph(graph_path)
-    logging.info(f'I am looking for a tree decomposition of width <= {tree_width} for the graph:\n{input_graph}')
+    graph_dir, graph_name = path.split(graph_path)
+    graph_name = graph_name.replace('.gr', '')
+    logging.info(f'I am looking for a tree decomposition of width <= {maximum_bag_size-1} for the graph:\n{input_graph}')
     input_graph.make_symmetric()
 
     # search for a tree decomposition
-    search_tree, success = compute_tree_decomposition(input_graph, tree_width+1)
+    search_tree, success = compute_tree_decomposition(input_graph, maximum_bag_size)
     if not success:
         logging.error('I failed computing a tree decomposition.')
         return None
 
     # save the computed search tree
-    with open(graph_path.replace('instances', 'dot') + '.dot', 'w') as f:
+    search_dot_path = f'dot/{graph_name}.dot'
+    with open(search_dot_path, 'w') as f:
         search_tree_string = search_tree.dot_string()
         f.write(search_tree_string)
 
@@ -251,11 +254,12 @@ def search_for_tree_decomposition(tree_width, graph_path):
     if not tree_decomposition.validate(input_graph):
         logging.error('I computed an invalid tree decomposition.')
         return None
-    logging.info(f'I found a valid tree decomposition of width at most {tree_width}.')
+    logging.info(f'I found a valid tree decomposition of width at most {maximum_bag_size-1}.')
     logging.debug(tree_decomposition)
 
     # save the computed tree decomposition
-    with open(graph_path.replace('instances', 'solutions') + '.td', 'w') as f:
+    treedec_path = f'treedecs/{graph_name}.td'
+    with open(treedec_path, 'w') as f:
         tree_string = tree_decomposition.output_format()
         f.write(tree_string)
 
