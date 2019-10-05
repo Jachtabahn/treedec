@@ -1,6 +1,6 @@
-solutions/*
-instances/*
 dot/*
 svg/*
+treedecs/*
+visualize-*
 __pycache__/*
 
