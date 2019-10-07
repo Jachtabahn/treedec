@@ -93,6 +93,52 @@ class TreeDecomposition:
             bags_string += child_string
         return num_bags, maximum_bag_size, vertices, edges_string, bags_string
 
+    def write_subgraph_dots(self, root_graph):
+        dot = ''
+        shell = ''
+        for child in self.children:
+            child_dot, child_shell = child.write_subgraph_dots(root_graph)
+            dot += child_dot
+            shell += child_shell
+
+        node_name = f'b{self.id}'
+        shell += f'dot -Tsvg -o svg/{node_name}.svg dot/{node_name}.dot\n'
+
+        graph_dot = root_graph.dot_string(visible=self.bag)
+        graph_dot_path = f'dot/{node_name}.dot'
+        with open(graph_dot_path, 'w') as f:
+            f.write(graph_dot)
+
+        node_color = '#ff8c00b2'
+        node_label = f'Bag {self.id}'
+
+        dot += f'{node_name} [label="{node_label}", penwidth=6, '
+        dot += 'shape=circle, '
+        dot += f'fillcolor="{node_color}", '
+        graph_svg_path = graph_dot_path.replace('dot', 'svg')
+        dot += f'image="{graph_svg_path}"]\n'
+
+        for child in self.children:
+            dot += f'{node_name} -> b{child.id}\n'
+
+        return dot, shell
+
+    def write_dot(self, graph_name, root_graph):
+        dot = 'digraph {\n'
+        dot += 'edge [penwidth=3]\n'
+        dot += 'node [style=filled, color=aliceblue]\n'
+        dot_nodes_string, shell = self.write_subgraph_dots(root_graph)
+        dot += dot_nodes_string
+        dot += '}'
+        with open(f'dot/{graph_name}.dot', 'w') as f:
+            f.write(dot)
+
+        shell += f'\ndot -Tsvg -o svg/{graph_name}.svg dot/{graph_name}.dot\n'
+        shell += f'inkscape svg/{graph_name}.svg\n'
+        with open(f'visualize-treedec-{graph_name}.sh', 'w') as f:
+            f.write(shell)
+        return dot
+
     def save(self, file):
         num_bags, maximum_bag_size, vertices, edges_string, bags_string = self.td_format()
         treedec_string = f's td {num_bags} {maximum_bag_size} {len(vertices)}\n'

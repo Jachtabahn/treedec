@@ -76,7 +76,7 @@ class DecompositionNode:
 
         node_name = f'b{self.id}' if self.is_bag else f'e{self.id}'
         shell += f'dot -Tsvg -o svg/{node_name}.svg dot/{node_name}.dot\n'
-        graph_dot = self.subgraph.dot_string(root_graph)
+        graph_dot = self.subgraph.dot_string(supergraph=root_graph)
         graph_dot_path = f'dot/{node_name}.dot'
         with open(graph_dot_path, 'w') as f:
             f.write(graph_dot)
@@ -279,6 +279,9 @@ def search_for_tree_decomposition(graph_name, given_maximum_bag_size, precompute
 
     # save the computed tree decomposition
     tree_decomposition.save(sys.stdout)
+
+    if graph_name is not None:
+        tree_decomposition.write_dot(graph_name, root_graph)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
