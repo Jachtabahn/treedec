@@ -51,12 +51,15 @@ class Graph:
                     edges.append((vertex, neigh))
         return edges
 
-    def dot_string(self, supergraph):
+    def dot_string(self, supergraph=None, visible=None):
+        graph = supergraph if supergraph is not None else self
+        vertices = visible if visible is not None else self.vertices()
+
         s = 'graph {\n'
         s += 'bgcolor=transparent\n'
         s += 'node [style=filled, color=aliceblue]\n'
-        for vertex in supergraph.vertices():
-            if vertex in self.vertices():
+        for vertex in graph.vertices():
+            if vertex in vertices:
                 if vertex == self.new_cop:
                     color = ', color=darkgreen'
                 elif vertex in self.cops:
@@ -67,8 +70,8 @@ class Graph:
             else:
                 s += f'{vertex} [label={vertex}, style=invis]\n'
 
-        for tail, head in supergraph.one_directional():
-            if tail not in self.vertices() or head not in self.vertices():
+        for tail, head in graph.one_directional():
+            if tail not in vertices or head not in vertices:
                 style = ' [style=invis]'
             else:
                 style = ''
