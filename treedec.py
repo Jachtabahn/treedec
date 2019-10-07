@@ -93,17 +93,12 @@ class TreeDecomposition:
             bags_string += child_string
         return num_bags, maximum_bag_size, vertices, edges_string, bags_string
 
-    def save(self, graph_name):
+    def save(self, file):
         num_bags, maximum_bag_size, vertices, edges_string, bags_string = self.td_format()
-
         treedec_string = f's td {num_bags} {maximum_bag_size} {len(vertices)}\n'
         treedec_string += bags_string
         treedec_string += edges_string
-
-        treedec_path = f'treedecs/{graph_name}.td'
-        with open(treedec_path, 'w') as f:
-            f.write(treedec_string)
-        return treedec_string
+        file.write(treedec_string)
 
     def spaced_string(self, spaces=0):
         s = ''
@@ -151,3 +146,14 @@ def parse_tree_decomposition(filepath):
 
     fill_up(trees, 1, [], edges)
     return trees[0]
+
+def extract_bag_size(treedec_path):
+    file = open(treedec_path, 'r')
+    for line in file:
+        info = line[:-1].split(' ')
+        if info[0] == 'c': continue
+        if info[0] == 's':
+            maximum_bag_size = int(info[3])
+            return maximum_bag_size
+    file.close()
+    return None
