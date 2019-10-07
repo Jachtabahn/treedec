@@ -3,6 +3,7 @@ import graph
 import treedec
 import argparse
 from os import path
+import sys
 
 UNKNOWN = 0
 FAILED = 1
@@ -238,12 +239,23 @@ def compute_choosable_cops(escape_component, known_cops, maximum_bag_size):
             choosable.append(vertex)
     return choosable
 
-def search_for_tree_decomposition(maximum_bag_size, graph_path):
-    # parse input graph
-    input_graph = graph.parse_graph(graph_path)
-    graph_dir, graph_name = path.split(graph_path)
-    graph_name = graph_name.replace('.gr', '')
-    logging.info(f'I am looking for a tree decomposition of width <= {maximum_bag_size-1} for the graph:\n{input_graph}')
+def search_for_tree_decomposition(graph_name, given_maximum_bag_size, precomputed_treedec_path):
+    input_graph = graph.parse_graph(sys.stdin)
+
+    if given_maximum_bag_size is None and precomputed_treedec_path is None:
+        logging.error('Please provide a maximum bag size or a path to a precomputed tree decomposition, where to find the max. bag size')
+        exit(1)
+    if given_maximum_bag_size is not None:
+        maximum_bag_size = given_maximum_bag_size
+        logging.info(f'Using the provided max. bag size {maximum_bag_size}')
+    else:
+        maximum_bag_size = treedec.extract_bag_size(precomputed_treedec_path)
+        if maximum_bag_size is None:
+            logging.error(f'Failed to extract the maximum bag size from path {precomputed_treedec_path}')
+            exit(1)
+        logging.info(f'Extracted the max. bag size {maximum_bag_size}')
+
+    logging.info(f'I initiate search for a tree decomposition of width at most {maximum_bag_size-1} for the graph:\n{input_graph}')
     input_graph.make_symmetric()
 
     # search for a tree decomposition
@@ -253,7 +265,8 @@ def search_for_tree_decomposition(maximum_bag_size, graph_path):
         return None
 
     # save the computed search tree
-    search_tree.write_dot(graph_name)
+    if graph_name is not None:
+        search_tree.write_dot(graph_name)
 
     # extract the found tree decomposition from the constructed search tree
     tree_decomposition = search_tree.extract_tree_decomposition()
@@ -264,13 +277,14 @@ def search_for_tree_decomposition(maximum_bag_size, graph_path):
     logging.debug(tree_decomposition)
 
     # save the computed tree decomposition
-    tree_decomposition.save(graph_name)
+    tree_decomposition.save(sys.stdout)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('--graph-name', '-g', default=None)
+    parser.add_argument('--maximum-bag-size', '-b', type=int, default=None)
+    parser.add_argument('--precomputed-treedec-path', '-w', type=str, default=None)
     parser.add_argument('--verbose', '-v', action='count')
-    parser.add_argument('--maximum-bag-size', '-b', type=int)
-    parser.add_argument('--graph-path', '-g')
     args = parser.parse_args()
 
     log_levels = {
@@ -278,6 +292,8 @@ if __name__ == '__main__':
         1: logging.INFO,
         2: logging.DEBUG
     }
+    if args.verbose is not None and args.verbose >= len(log_levels):
+        args.verbose = len(log_levels)-1
     logging.basicConfig(format='%(message)s', level=log_levels[args.verbose])
 
-    search_for_tree_decomposition(args.maximum_bag_size, args.graph_path)
+    search_for_tree_decomposition(args.graph_name, args.maximum_bag_size, args.precomputed_treedec_path)
