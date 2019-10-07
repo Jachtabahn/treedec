@@ -136,17 +136,20 @@ def show_connected_components(graph):
     for i, comp in enumerate(components):
         logging.debug(f'Component #{i+1} is\n{comp}\n')
 
-def parse_graph(filepath):
+def parse_graph(file):
+    '''
+        This function consumes the file, that is, it can only be called once. If it is called a second time, it will continue to read
+        the file, where it left off last time, namely at the end and such read nothing.
+    '''
     graph = Graph()
-    with open(filepath) as file:
-        for line in file:
-            if line[0] == 'c':
-                continue
-            if line[0] == 'p':
-                continue
-            edge = line.split(' ')
-            tail, head = int(edge[0]), int(edge[1])
-            if tail not in graph.adjacent:
-                graph.adjacent[tail] = []
-            graph.adjacent[tail].append(head)
+    for line in file:
+        if line[0] == 'c':
+            continue
+        if line[0] == 'p':
+            continue
+        edge = line.split(' ')
+        tail, head = int(edge[0]), int(edge[1])
+        if tail not in graph.adjacent:
+            graph.adjacent[tail] = []
+        graph.adjacent[tail].append(head)
     return graph
