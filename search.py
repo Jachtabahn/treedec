@@ -155,6 +155,7 @@ def compute_tree_decomposition(split_graph, maximum_bag_size):
     root_graph = split_graph
     node = DecompositionNode(pred=None, labelled_subgraph=split_graph, is_bag=True)
     node.decompose_subgraph()
+    logging.debug(f'Input graph has {len(node.successors)} connected components.')
     while 1:
         if node.is_bag:
             bag = node

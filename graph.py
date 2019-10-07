@@ -144,12 +144,14 @@ def parse_graph(file):
     graph = Graph()
     for line in file:
         if line[0] == 'c':
-            continue
-        if line[0] == 'p':
-            continue
-        edge = line.split(' ')
-        tail, head = int(edge[0]), int(edge[1])
-        if tail not in graph.adjacent:
-            graph.adjacent[tail] = []
-        graph.adjacent[tail].append(head)
+            pass
+        elif line[0] == 'p':
+            info = line.split(' ')
+            num_vertices = int(info[2])
+            for v in range(num_vertices):
+                graph.adjacent[v+1] = []
+        else:
+            edge = line.split(' ')
+            tail, head = int(edge[0]), int(edge[1])
+            graph.adjacent[tail].append(head)
     return graph
