@@ -1,6 +1,6 @@
-eval/*
-dot/*
-svg/*
-treedecs/*
+eval
+dot
+svg
+treedecs
 visualize-*
-__pycache__/*
+__pycache__
