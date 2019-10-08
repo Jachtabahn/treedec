@@ -12,10 +12,12 @@ def convert_to_ints(l):
 
 class TreeDecomposition:
 
-    def __init__(self, bag, tree_id, children):
+    def __init__(self, bag, tree_id, children, treewidth=None, joinwidth=None):
         self.bag = bag
         self.id = tree_id
         self.children = children
+        self.treewidth = treewidth
+        self.joinwidth = joinwidth
 
     def extract_bags(self, vertex):
         if vertex in self.bag:
@@ -72,7 +74,8 @@ class TreeDecomposition:
         return True
 
     def td_format(self, bag_id=1):
-        bags_string = f'b {bag_id}'
+        bags_string = f'c width {self.treewidth}, joinwidth {self.joinwidth}\n'
+        bags_string += f'b {bag_id}'
         for vertex in self.bag:
             bags_string += f' {vertex}'
         bags_string += '\n'
@@ -93,49 +96,62 @@ class TreeDecomposition:
             bags_string += child_string
         return num_bags, maximum_bag_size, vertices, edges_string, bags_string
 
-    def write_subgraph_dots(self, root_graph):
+    def write_subgraph_dots(self, graph_name, root_graph):
         dot = ''
         shell = ''
         for child in self.children:
-            child_dot, child_shell = child.write_subgraph_dots(root_graph)
+            child_dot, child_shell = child.write_subgraph_dots(graph_name, root_graph)
             dot += child_dot
             shell += child_shell
 
-        node_name = f'b{self.id}'
-        shell += f'dot -Tsvg -o svg/{node_name}.svg dot/{node_name}.dot\n'
-
+        # create the dot file
         graph_dot = root_graph.dot_string(visible=self.bag)
-        graph_dot_path = f'dot/{node_name}.dot'
+        node_name = f'b{self.id}'
+        graph_dot_path = f'visuals/{graph_name}/.dot/{node_name}.dot'
         with open(graph_dot_path, 'w') as f:
             f.write(graph_dot)
 
+        # create the command to build an svg file from that dot file
+        graph_svg_path = f'visuals/{graph_name}/.svg/{node_name}.svg'
+        shell += f'dot -Tsvg -o {graph_svg_path} {graph_dot_path}\n'
+
+        # create a dot string for the bag using that svg file as an inner imeage
+        node_label = f'''<table cellpadding="0" cellspacing="0" border="0">
+            <tr>
+                <td align="left">Bag   </td>
+                <td>{self.id}</td>
+            </tr>
+            <tr>
+                <td align="left">Treewidth   </td>
+                <td>{self.treewidth}</td>
+            </tr>
+            <tr>
+                <td align="left">Joinwidth   </td>
+                <td>{self.joinwidth}</td>
+            </tr>
+            </table>'''
         node_color = '#ff8c00b2'
-        node_label = f'Bag {self.id}'
-
-        dot += f'{node_name} [label="{node_label}", penwidth=6, '
-        dot += 'shape=circle, '
+        dot += f'{node_name} [label=<{node_label}>, labelloc="top", '
+        dot += 'shape=rectangle, '
         dot += f'fillcolor="{node_color}", '
-        graph_svg_path = graph_dot_path.replace('dot', 'svg')
         dot += f'image="{graph_svg_path}"]\n'
-
         for child in self.children:
             dot += f'{node_name} -> b{child.id}\n'
-
         return dot, shell
 
     def write_dot(self, graph_name, root_graph):
         dot = 'digraph {\n'
         dot += 'edge [penwidth=3]\n'
         dot += 'node [style=filled, color=aliceblue]\n'
-        dot_nodes_string, shell = self.write_subgraph_dots(root_graph)
+        dot_nodes_string, shell = self.write_subgraph_dots(graph_name, root_graph)
         dot += dot_nodes_string
         dot += '}'
-        with open(f'dot/{graph_name}.dot', 'w') as f:
+        with open(f'visuals/{graph_name}/.dot/treedec.dot', 'w') as f:
             f.write(dot)
 
-        shell += f'\ndot -Tsvg -o svg/{graph_name}.svg dot/{graph_name}.dot\n'
-        shell += f'inkscape svg/{graph_name}.svg\n'
-        with open(f'visualize-treedec-{graph_name}.sh', 'w') as f:
+        shell += f'dot -Tsvg -o visuals/{graph_name}/treedec.svg visuals/{graph_name}/.dot/treedec.dot\n'
+        shell += f'inkscape visuals/{graph_name}/treedec.svg\n'
+        with open(f'visuals/{graph_name}/treedec.sh', 'w') as f:
             f.write(shell)
         return dot
 
