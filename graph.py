@@ -1,4 +1,5 @@
-
+from os import path
+import os
 
 class Graph:
 
@@ -50,6 +51,28 @@ class Graph:
                 if (neigh, vertex) not in edges:
                     edges.append((vertex, neigh))
         return edges
+
+    def create_visual_dir(self, graph_name):
+        if not path.exists('visuals'):
+            os.mkdir('visuals')
+        directory = f'visuals/{graph_name}'
+        if not path.exists(directory):
+            os.mkdir(directory)
+        dot = f'{directory}/.dot'
+        if not path.exists(dot):
+            os.mkdir(dot)
+        svg = f'{directory}/.svg'
+        if not path.exists(svg):
+            os.mkdir(svg)
+
+    def write_dot(self, graph_name):
+        with open(f'visuals/{graph_name}/.dot/graph.dot', 'w') as f:
+            f.write(self.dot_string())
+
+        shell = f'dot -Tsvg -o visuals/{graph_name}/graph.svg visuals/{graph_name}/.dot/graph.dot\n'
+        shell += f'inkscape visuals/{graph_name}/graph.svg\n'
+        with open(f'visuals/{graph_name}/graph.sh', 'w') as f:
+            f.write(shell)
 
     def dot_string(self, supergraph=None, visible=None):
         graph = supergraph if supergraph is not None else self
