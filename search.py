@@ -26,6 +26,8 @@ class DecompositionNode:
         self.is_bag = is_bag
         self.strategy = None
         self.status = UNKNOWN
+        self.treewidth = None
+        self.joinwidth = None
 
         global num_nodes
         num_nodes += 1
@@ -63,7 +65,12 @@ class DecompositionNode:
         for succ in self.successors:
             child_decomposition = succ.extract_tree_decomposition()
             children.append(child_decomposition)
-        tree_decomposition = treedec.TreeDecomposition(self.subgraph.cops, self.id, children)
+        tree_decomposition = treedec.TreeDecomposition(
+            bag=self.subgraph.cops,
+            tree_id=self.id,
+            children=children,
+            treewidth=self.treewidth,
+            joinwidth=self.joinwidth)
         return tree_decomposition
 
     def write_subgraph_dots(self):
@@ -181,6 +188,25 @@ def compute_tree_decomposition(split_graph, maximum_bag_size):
                 node = unknown_bag_edges[index]
             else:
                 bag.set_status(SUCCESS)
+
+                # determine the number of neighbours of this bag
+                bag_degree = len(bag.successors)
+                if bag.predecessor is not None:
+                    bag_degree += 1
+
+                # determine the treewidth for the tree under this bag
+                my_treewidth = len(bag.subgraph.cops)-1
+                if bag_degree >= 3:
+                    my_joinwidth = my_treewidth
+                else:
+                    my_joinwidth = -1
+                for edge in bag.successors:
+                    next_bag = edge.strategy
+                    my_treewidth =  max(my_treewidth, next_bag.treewidth)
+                    my_joinwidth =  max(my_joinwidth, next_bag.joinwidth)
+                bag.treewidth = my_treewidth
+                bag.joinwidth = my_joinwidth
+
                 if bag.predecessor is None: return bag, True
                 node = bag.predecessor
         else:
@@ -265,9 +291,9 @@ def search_for_tree_decomposition(graph_name, given_maximum_bag_size, precompute
         logging.error('I failed computing a tree decomposition.')
         return None
 
-    # save the computed search tree
-    if graph_name is not None:
-        search_tree.write_dot(graph_name)
+    # visualize the computed search tree
+    # if graph_name is not None:
+    #     search_tree.write_dot(graph_name)
 
     # extract the found tree decomposition from the constructed search tree
     tree_decomposition = search_tree.extract_tree_decomposition()
@@ -280,8 +306,11 @@ def search_for_tree_decomposition(graph_name, given_maximum_bag_size, precompute
     # save the computed tree decomposition
     tree_decomposition.save(sys.stdout)
 
+    # visualize the input graph and the computed tree decomposition
     if graph_name is not None:
-        tree_decomposition.write_dot(graph_name, root_graph)
+        input_graph.create_visual_dir(graph_name)
+        input_graph.write_dot(graph_name)
+        tree_decomposition.write_dot(graph_name, input_graph)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
