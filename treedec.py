@@ -131,7 +131,7 @@ class TreeDecomposition:
             </tr>
             </table>'''
         node_color = '#ff8c00b2'
-        dot += f'{node_name} [label=<{node_label}>, labelloc="top", '
+        dot += f'{node_name} [label="", xlabel=<{node_label}>, labelloc="top", '
         dot += 'shape=rectangle, '
         dot += f'fillcolor="{node_color}", '
         dot += f'image="{graph_svg_path}"]\n'
