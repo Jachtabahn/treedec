@@ -1,5 +1,6 @@
 from os import path
 import os
+import logging
 
 class Graph:
 
@@ -53,48 +54,35 @@ class Graph:
         return edges
 
     def create_visual_dir(self, graph_name):
-        if not path.exists('visuals'):
-            os.mkdir('visuals')
-        directory = f'visuals/{graph_name}'
+        if not path.exists('dot'):
+            logging.error('The dot/ directory does not exist!')
+            exit(1)
+        directory = f'dot/{graph_name}'
         if not path.exists(directory):
             os.mkdir(directory)
-        dot = f'{directory}/.dot'
-        if not path.exists(dot):
-            os.mkdir(dot)
-        svg = f'{directory}/.svg'
-        if not path.exists(svg):
-            os.mkdir(svg)
 
     def write_dot(self, graph_name):
-        with open(f'visuals/{graph_name}/.dot/graph.dot', 'w') as f:
-            f.write(self.dot_string())
+        with open(f'dot/{graph_name}/graph.dot', 'w') as f:
+            f.write(self.dot_string(graph_name))
 
-        shell = f'dot -Tsvg -o visuals/{graph_name}/graph.svg visuals/{graph_name}/.dot/graph.dot\n'
-        shell += f'inkscape visuals/{graph_name}/graph.svg\n'
-        with open(f'visuals/{graph_name}/graph.sh', 'w') as f:
-            f.write(shell)
-
-    def dot_string(self, supergraph=None, visible=None):
-        graph = supergraph if supergraph is not None else self
-        vertices = visible if visible is not None else self.vertices()
-
-        s = 'graph {\n'
+    def dot_string(self, graph_name):
+        s = f'graph '
+        s += '{\n'
         s += 'bgcolor=transparent\n'
-        s += 'node [style=filled, color=aliceblue]\n'
-        for vertex in graph.vertices():
-            if vertex in vertices:
+        for vertex in self.vertices():
+            if vertex in self.vertices():
                 if vertex == self.new_cop:
                     color = ', color=darkgreen'
                 elif vertex in self.cops:
                     color = ', color=gray'
                 else:
                     color = ''
-                s += f'{vertex} [label={vertex}{color}]\n'
+                s += f'{vertex} [label="{vertex}"{color}]\n'
             else:
-                s += f'{vertex} [label={vertex}, style=invis]\n'
+                s += f'{vertex} [label="{vertex}", style=invis]\n'
 
-        for tail, head in graph.one_directional():
-            if tail not in vertices or head not in vertices:
+        for tail, head in self.one_directional():
+            if tail not in self.vertices() or head not in self.vertices():
                 style = ' [style=invis]'
             else:
                 style = ''
