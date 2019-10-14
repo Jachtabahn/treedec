@@ -267,7 +267,7 @@ def compute_choosable_cops(escape_component, known_cops, maximum_bag_size):
     return choosable
 
 def search_for_tree_decomposition(graph_name, given_maximum_bag_size, precomputed_treedec_path):
-    input_graph = graph.parse_graph(sys.stdin)
+    input_graph = graph.parse_network(sys.stdin)
 
     if given_maximum_bag_size is None and precomputed_treedec_path is None:
         logging.error('Please provide a maximum bag size or a path to a precomputed tree decomposition, where to find the max. bag size')
@@ -310,7 +310,7 @@ def search_for_tree_decomposition(graph_name, given_maximum_bag_size, precompute
     if graph_name is not None:
         input_graph.create_visual_dir(graph_name)
         input_graph.write_dot(graph_name)
-        tree_decomposition.write_dot(graph_name, input_graph)
+        tree_decomposition.write_dot(graph_name)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

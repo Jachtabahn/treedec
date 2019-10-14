@@ -96,64 +96,34 @@ class TreeDecomposition:
             bags_string += child_string
         return num_bags, maximum_bag_size, vertices, edges_string, bags_string
 
-    def write_subgraph_dots(self, graph_name, root_graph):
+    def subgraph_dots(self, graph_name):
         dot = ''
-        shell = ''
         for child in self.children:
-            child_dot, child_shell = child.write_subgraph_dots(graph_name, root_graph)
+            child_dot = child.subgraph_dots(graph_name)
             dot += child_dot
-            shell += child_shell
 
-        # create the dot file
-        graph_dot = root_graph.dot_string(visible=self.bag)
+        # create a dot string for the bag
         node_name = f'b{self.id}'
-        graph_dot_path = f'visuals/{graph_name}/.dot/{node_name}.dot'
-        with open(graph_dot_path, 'w') as f:
-            f.write(graph_dot)
-
-        # create the command to build an svg file from that dot file
-        graph_svg_path = f'visuals/{graph_name}/.svg/{node_name}.svg'
-        shell += f'dot -Tsvg -o {graph_svg_path} {graph_dot_path}\n'
-
-        # create a dot string for the bag using that svg file as an inner imeage
-        node_label = f'''<table cellpadding="0" cellspacing="0" border="0">
-            <tr>
-                <td align="left">Bag   </td>
-                <td>{self.id}</td>
-            </tr>
-            <tr>
-                <td align="left">Treewidth   </td>
-                <td>{self.treewidth}</td>
-            </tr>
-            <tr>
-                <td align="left">Joinwidth   </td>
-                <td>{self.joinwidth}</td>
-            </tr>
-            </table>'''
         node_color = '#ff8c00b2'
-        dot += f'{node_name} [label="", xlabel=<{node_label}>, labelloc="top", '
+        dot += f'{node_name} [label="{str(self.bag)[1:-1]}", labelloc="top", '
         dot += 'shape=rectangle, '
-        dot += f'fillcolor="{node_color}", '
-        dot += f'image="{graph_svg_path}"]\n'
+        dot += f'fillcolor="{node_color}"]\n'
         for child in self.children:
             dot += f'{node_name} -> b{child.id}\n'
-        return dot, shell
-
-    def write_dot(self, graph_name, root_graph):
-        dot = 'digraph {\n'
-        dot += 'edge [penwidth=3]\n'
-        dot += 'node [style=filled, color=aliceblue]\n'
-        dot_nodes_string, shell = self.write_subgraph_dots(graph_name, root_graph)
-        dot += dot_nodes_string
-        dot += '}'
-        with open(f'visuals/{graph_name}/.dot/treedec.dot', 'w') as f:
-            f.write(dot)
-
-        shell += f'dot -Tsvg -o visuals/{graph_name}/treedec.svg visuals/{graph_name}/.dot/treedec.dot\n'
-        shell += f'inkscape visuals/{graph_name}/treedec.svg\n'
-        with open(f'visuals/{graph_name}/treedec.sh', 'w') as f:
-            f.write(shell)
         return dot
+
+    def write_dot(self, graph_name=None, output_file=None):
+        dot = 'digraph {\n'
+        dot += 'bgcolor=transparent\n'
+        dot += self.subgraph_dots(graph_name)
+        dot += '}\n'
+
+        if output_file is None:
+            assert graph_name is not None
+            with open(f'dot/{graph_name}/habimm.dot', 'w') as f:
+                f.write(dot)
+        else:
+            output_file.write(dot)
 
     def save(self, file):
         num_bags, maximum_bag_size, vertices, edges_string, bags_string = self.td_format()
@@ -188,24 +158,24 @@ def fill_up(trees, bag_id, parents, edges):
         trees[bag_id-1].children.append(trees[child_id-1])
         fill_up(trees, child_id, child_parents, edges)
 
-def parse_tree_decomposition(filepath):
+def parse_treedec(file):
     index, edges, trees = 1, [], []
-    file = open(filepath, 'r')
     for line in file:
-        info = line[:-1].split(' ')
-        if info[0] == 'c': continue
-        if info[0] == 's': continue
-        if info[0] == 'b':
+        if line[0] == 'c': continue
+        elif line[0] == 's': continue
+
+        if line[-1] == '\n':
+            line = line[:-1]
+        info = line.split(' ')
+        if line[0] == 'b':
             bag_content = info[1:]
             convert_to_ints(bag_content)
             tree_decomposition = TreeDecomposition(bag_content, index, [])
             index += 1
             trees.append(tree_decomposition)
-            continue
-        convert_to_ints(info)
-        edges.append(info)
-    file.close()
-
+        else:
+            convert_to_ints(info)
+            edges.append(info)
     fill_up(trees, 1, [], edges)
     return trees[0]
 
