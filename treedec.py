@@ -105,8 +105,7 @@ class TreeDecomposition:
         # create a dot string for the bag
         node_name = f'b{self.id}'
         node_color = '#ff8c00b2'
-        dot += f'{node_name} [label="{str(self.bag)[1:-1]}", labelloc="top", '
-        dot += 'shape=rectangle, '
+        dot += f'{node_name} [label="{str(self.bag)[1:-1]}", '
         dot += f'fillcolor="{node_color}"]\n'
         for child in self.children:
             dot += f'{node_name} -> b{child.id}\n'
@@ -115,6 +114,8 @@ class TreeDecomposition:
     def write_dot(self, graph_name=None, output_file=None):
         dot = 'digraph {\n'
         dot += 'bgcolor=transparent\n'
+        node_color = '#ff8c00b2'
+        dot += f'edge [color="{node_color}"]\n'
         dot += self.subgraph_dots(graph_name)
         dot += '}\n'
 
