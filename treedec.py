@@ -96,35 +96,27 @@ class TreeDecomposition:
             bags_string += child_string
         return num_bags, maximum_bag_size, vertices, edges_string, bags_string
 
-    def subgraph_dots(self, graph_name):
-        dot = ''
+    def visualize_nodes(self):
+        dot_string = ''
         for child in self.children:
-            child_dot = child.subgraph_dots(graph_name)
-            dot += child_dot
+            child_dot = child.visualize_nodes()
+            dot_string += child_dot
 
-        # create a dot string for the bag
+        # create a dot_string string for the bag
         node_name = f'b{self.id}'
-        node_color = '#ff8c00b2'
-        dot += f'{node_name} [label="{str(self.bag)[1:-1]}", '
-        dot += f'fillcolor="{node_color}"]\n'
+        dot_string += f'{node_name} [label="{str(self.bag)[1:-1]}", '
+        dot_string += f'fillcolor="#ff8c00b2"]\n'
         for child in self.children:
-            dot += f'{node_name} -> b{child.id}\n'
-        return dot
+            dot_string += f'{node_name} -- b{child.id}\n'
+        return dot_string
 
-    def write_dot(self, graph_name=None, output_file=None):
-        dot = 'digraph {\n'
-        dot += 'bgcolor=transparent\n'
-        node_color = '#ff8c00b2'
-        dot += f'edge [color="{node_color}"]\n'
-        dot += self.subgraph_dots(graph_name)
-        dot += '}\n'
-
-        if output_file is None:
-            assert graph_name is not None
-            with open(f'dot/{graph_name}/habimm.dot', 'w') as f:
-                f.write(dot)
-        else:
-            output_file.write(dot)
+    def visualize(self):
+        dot_string = 'graph {\n'
+        dot_string += 'bgcolor=transparent\n'
+        dot_string += f'edge [color="#ff8c00b2"]\n'
+        dot_string += self.visualize_nodes()
+        dot_string += '}\n'
+        return dot_string
 
     def save(self, file):
         num_bags, maximum_bag_size, vertices, edges_string, bags_string = self.td_format()
@@ -159,7 +151,7 @@ def fill_up(trees, bag_id, parents, edges):
         trees[bag_id-1].children.append(trees[child_id-1])
         fill_up(trees, child_id, child_parents, edges)
 
-def parse_treedec(file):
+def parse(file):
     index, edges, trees = 1, [], []
     for line in file:
         if line[0] == 'c': continue
