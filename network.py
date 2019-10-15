@@ -61,9 +61,9 @@ class Graph:
         if not path.exists(directory):
             os.mkdir(directory)
 
-    def write_dot(self, graph_name=None, output_file=None):
-        dot = 'graph {\n'
-        dot += 'bgcolor=transparent\n'
+    def visualize(self, graph_name=None, output_file=None):
+        dot_string = 'graph {\n'
+        dot_string += 'bgcolor=transparent\n'
         for vertex in self.vertices():
             if vertex in self.vertices():
                 if vertex == self.new_cop:
@@ -72,25 +72,18 @@ class Graph:
                     color = ', color=gray'
                 else:
                     color = ''
-                dot += f'{vertex} [label="{vertex}"{color}]\n'
+                dot_string += f'{vertex} [label="{vertex}"{color}]\n'
             else:
-                dot += f'{vertex} [label="{vertex}", style=invis]\n'
+                dot_string += f'{vertex} [label="{vertex}", style=invis]\n'
 
         for tail, head in self.one_directional():
             if tail not in self.vertices() or head not in self.vertices():
                 style = ' [style=invis]'
             else:
                 style = ''
-            dot += f'{tail} -- {head}{style}\n'
-        dot += '}\n'
-
-        if output_file is None:
-            assert graph_name is not None
-            with open(f'dot/{graph_name}/graph.dot', 'w') as f:
-                f.write(dot)
-        else:
-            output_file.write(dot)
-        return dot
+            dot_string += f'{tail} -- {head}{style}\n'
+        dot_string += '}\n'
+        return dot_string
 
     def __str__(self):
         s = '----------- Graph -----------\n'
@@ -152,24 +145,24 @@ def show_connected_components(graph):
     for i, comp in enumerate(components):
         logging.debug(f'Component #{i+1} is\n{comp}\n')
 
-def parse_network(lines):
+def parse(file):
     '''
-        If lines is a file, this function consumes the file, that is, it can only be called once.
+        If file is a file, this function consumes the file, that is, it can only be called once.
         If it is called a second time, the function will continue to read the file,
         where it left off last time, namely at the end and read nothing.
     '''
     graph = Graph()
-    for line in lines:
+    for line in file:
         if line[0] == 'c': continue
+
         if line[-1] == '\n':
             line = line[:-1]
+        info = line.split(' ')
         if line[0] == 'p':
-            info = line.split(' ')
             num_vertices = int(info[2])
             for v in range(num_vertices):
                 graph.adjacent[v+1] = []
         else:
-            edge = line.split(' ')
-            tail, head = int(edge[0]), int(edge[1])
+            tail, head = int(info[0]), int(info[1])
             graph.adjacent[tail].append(head)
     return graph
