@@ -31,6 +31,7 @@ The network page shows the network itself and its tree decompositions.
 * can click on a node to highlight this node and all its edges
 * each tree decomposition has a treewidth and a joinwidth
 * each tree decomposition has a list of runtimes, which a new invocation of the indicated algorithm used to compute it
+* each tree decomposition has a list of parameters, which were passed to the indicated algorithm in every invocation
 
 ## Generation of a network page
 
