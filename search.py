@@ -245,7 +245,12 @@ def choose_weakest_component(unknown_subgraphs):
     Choose a cop that is most likely to succeed to decompose with the given maximum bag size
     The given list of choosable cops is not empty.
 '''
-def choose_strongest_cop(subgraph, unknown_cops):
+def choose_strongest_cop(subnet, unknown_cops):
+    # Without this check: in ClebschGraph.gr, Bag 46865 is a bag with a new cop that is not adjacent to any old cop
+    # We want to not consider bags, where the new cop is not adjacent to any old cop
+    for i, cop_vertex in enumerate(unknown_cops):
+        if not set(subnet.adjacent[cop_vertex]).isdisjoint(subnet.cops):
+            return i
     return 0
 
 def compute_choosable_cops(escape_component, known_cops, maximum_bag_size):
