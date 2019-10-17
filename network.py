@@ -53,15 +53,7 @@ class Graph:
                     edges.append((vertex, neigh))
         return edges
 
-    def create_visual_dir(self, graph_name):
-        if not path.exists('dot'):
-            logging.error('The dot/ directory does not exist!')
-            exit(1)
-        directory = f'dot/{graph_name}'
-        if not path.exists(directory):
-            os.mkdir(directory)
-
-    def visualize(self, graph_name=None, output_file=None):
+    def visualize(self):
         dot_string = 'graph {\n'
         dot_string += 'bgcolor=transparent\n'
         for vertex in self.vertices():
