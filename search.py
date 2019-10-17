@@ -1,5 +1,5 @@
 import logging
-import graph
+import network
 import treedec
 import argparse
 from os import path
@@ -10,8 +10,8 @@ FAILED = 1
 SUCCESS = 2
 
 '''
-    This is the root graph, that is decomposed into a tree. It's used in DecompositionNode.write_subgraph_dots(), when inside
-    each search tree node, I draw the entire graph and then blend out the parts I don't need, so that the subgraphs are
+    This is the root network, that is decomposed into a tree. It's used in DecompositionNode.write_subgraph_dots(), when inside
+    each search tree node, I draw the entire network and then blend out the parts I don't need, so that the subgraphs are
     more comparable.
 '''
 root_graph = None
@@ -53,7 +53,7 @@ class DecompositionNode:
 
     def decompose_subgraph(self):
         assert self.is_bag
-        components = graph.decompose_into_connected_components(self.subgraph)
+        components = network.decompose_into_connected_components(self.subgraph)
         for comp in components:
             edge_child = DecompositionNode(pred=self, labelled_subgraph=comp, is_bag=False)
             self.add_child(edge_child)
@@ -114,19 +114,19 @@ class DecompositionNode:
 
         return dot, shell
 
-    def write_dot(self, graph_name):
+    def write_dot(self, network_name):
         dot = 'digraph {\n'
         dot += 'edge [penwidth=3]\n'
         dot += 'node [style=filled, color=aliceblue]\n'
         dot_nodes_string, shell = self.write_subgraph_dots()
         dot += dot_nodes_string
         dot += '}'
-        with open(f'dot/{graph_name}.dot', 'w') as f:
+        with open(f'dot/{network_name}.dot', 'w') as f:
             f.write(dot)
 
-        shell += f'\ndot -Tsvg -o svg/{graph_name}.svg dot/{graph_name}.dot\n'
-        shell += f'inkscape svg/{graph_name}.svg\n'
-        with open(f'visualize-{graph_name}.sh', 'w') as f:
+        shell += f'\ndot -Tsvg -o svg/{network_name}.svg dot/{network_name}.dot\n'
+        shell += f'inkscape svg/{network_name}.svg\n'
+        with open(f'visualize-{network_name}.sh', 'w') as f:
             f.write(shell)
         return dot
 
@@ -162,7 +162,7 @@ def compute_tree_decomposition(split_graph, maximum_bag_size):
     root_graph = split_graph
     node = DecompositionNode(pred=None, labelled_subgraph=split_graph, is_bag=True)
     node.decompose_subgraph()
-    logging.debug(f'Input graph has {len(node.successors)} connected components.')
+    logging.debug(f'Input network has {len(node.successors)} connected components.')
     while 1:
         if node.is_bag:
             bag = node
@@ -266,8 +266,8 @@ def compute_choosable_cops(escape_component, known_cops, maximum_bag_size):
             choosable.append(vertex)
     return choosable
 
-def search_for_tree_decomposition(graph_name, given_maximum_bag_size, precomputed_treedec_path):
-    input_graph = graph.parse_network(sys.stdin)
+def search_for_tree_decomposition(network_name, given_maximum_bag_size, precomputed_treedec_path):
+    input_network = network.parse(sys.stdin)
 
     if given_maximum_bag_size is None and precomputed_treedec_path is None:
         logging.error('Please provide a maximum bag size or a path to a precomputed tree decomposition, where to find the max. bag size')
@@ -282,22 +282,22 @@ def search_for_tree_decomposition(graph_name, given_maximum_bag_size, precompute
             exit(1)
         logging.info(f'Extracted the max. bag size {maximum_bag_size}')
 
-    logging.info(f'I initiate search for a tree decomposition of width at most {maximum_bag_size-1} for the graph:\n{input_graph}')
-    input_graph.make_symmetric()
+    logging.info(f'I initiate search for a tree decomposition of width at most {maximum_bag_size-1} for the network:\n{input_network}')
+    input_network.make_symmetric()
 
     # search for a tree decomposition
-    search_tree, success = compute_tree_decomposition(input_graph, maximum_bag_size)
+    search_tree, success = compute_tree_decomposition(input_network, maximum_bag_size)
     if not success:
         logging.error('I failed computing a tree decomposition.')
         return None
 
     # visualize the computed search tree
-    # if graph_name is not None:
-    #     search_tree.write_dot(graph_name)
+    # if network_name is not None:
+    #     search_tree.write_dot(network_name)
 
     # extract the found tree decomposition from the constructed search tree
     tree_decomposition = search_tree.extract_tree_decomposition()
-    if not tree_decomposition.validate(input_graph):
+    if not tree_decomposition.validate(input_network):
         logging.error('I computed an invalid tree decomposition.')
         return None
     logging.info(f'I found a valid tree decomposition of width at most {maximum_bag_size-1}.')
@@ -306,15 +306,14 @@ def search_for_tree_decomposition(graph_name, given_maximum_bag_size, precompute
     # save the computed tree decomposition
     tree_decomposition.save(sys.stdout)
 
-    # visualize the input graph and the computed tree decomposition
-    if graph_name is not None:
-        input_graph.create_visual_dir(graph_name)
-        input_graph.write_dot(graph_name)
-        tree_decomposition.write_dot(graph_name)
+    # visualize the input network and the computed tree decomposition
+    # if network_name is not None:
+    #     input_network.write_dot(network_name)
+    #     tree_decomposition.write_dot(network_name)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--graph-name', '-g', default=None)
+    parser.add_argument('--network-name', '-g', default=None)
     parser.add_argument('--maximum-bag-size', '-b', type=int, default=None)
     parser.add_argument('--precomputed-treedec-path', '-w', type=str, default=None)
     parser.add_argument('--verbose', '-v', action='count')
@@ -329,4 +328,4 @@ if __name__ == '__main__':
         args.verbose = len(log_levels)-1
     logging.basicConfig(format='%(message)s', level=log_levels[args.verbose])
 
-    search_for_tree_decomposition(args.graph_name, args.maximum_bag_size, args.precomputed_treedec_path)
+    search_for_tree_decomposition(args.network_name, args.maximum_bag_size, args.precomputed_treedec_path)
