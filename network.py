@@ -56,6 +56,7 @@ class Graph:
     def visualize(self):
         dot_string = 'graph {\n'
         dot_string += 'bgcolor=transparent\n'
+        dot_string += 'node [style=filled, color=aliceblue]\n'
         for vertex in self.vertices():
             if vertex in self.vertices():
                 if vertex == self.new_cop:
