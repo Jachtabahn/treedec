@@ -40,17 +40,17 @@ Given a network file, for example ClebschGraph.gr.
 1. Generate a directory:
     ClebschGraph/
     ├── index.html
-    ├── scalars.json
+    ├── info.json
     ├── visuals/
     └── structs/
         ├── network.gr
 
-The file *scalars.json* will contain basic easily computable information about the network, like the number of nodes, edges, the network's name.
+The file *info.json* will contain basic easily computable information about the network, like the number of nodes, edges, the network's name.
 
 2. Compute tree decompositions using various solvers:
     ClebschGraph/
     ├── index.html
-    ├── scalars.json
+    ├── info.json
     ├── visuals/
     └── structs/
         ├── network.gr
@@ -61,7 +61,7 @@ The file *scalars.json* will contain basic easily computable information about t
 3. Create dot files from the network file and the various tree decomposition files:
     ClebschGraph/
     ├── index.html
-    ├── scalars.json
+    ├── info.json
     ├── visuals/
     │   ├── network.dot
     │   ├── habimm.dot
