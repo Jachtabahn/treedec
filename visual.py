@@ -36,23 +36,30 @@ if __name__ == '__main__':
     logging.basicConfig(format='%(message)s', level=log_levels[args.verbose])
 
     for filename in os.listdir(args.structs_dir):
-        # parse the structure in this file
         filepath = f'{args.structs_dir}/{filename}'
+        structure_name = filename[:-3]
+
         if filename[-3:] == '.gr':
             with open(filepath) as struct_file:
                 structure = network.parse(struct_file)
+
+            # create a dot string from the parsed structure
+            dot_string = 'info.dot = `\n'
+            dot_string += structure.visualize()
+            dot_string += '`\n'
         elif filename[-3:] == '.td':
             with open(filepath) as struct_file:
                 structure = treedec.parse(struct_file)
-        else:
-            logging.error(f'Ignoring file {filename} with unknown extension.')
-            continue
 
-        # create a dot string from the parsed structure
-        structure_name = filename[:-3]
-        dot_string = f'var {structure_name}Dot = `\n'
-        dot_string += structure.visualize()
-        dot_string += '`\n'
+            # create a dot string from the parsed structure
+            dot_string = f'if ("{structure_name}" in info.treedecs) '
+            dot_string += '{ '
+            dot_string += f'info.treedecs["{structure_name}"].dot = `\n'
+            dot_string += structure.visualize()
+            dot_string += '`}\n'
+        else:
+            logging.warning(f'Ignoring file {filename} with unknown extension.')
+            continue
 
         # write that dot string to a file
         visual_path = f'{args.visuals_dir}/{structure_name}.dot.js'
