@@ -9,19 +9,12 @@ UNKNOWN = 0
 FAILED = 1
 SUCCESS = 2
 
-'''
-    This is the root network, that is decomposed into a tree. It's used in DecompositionNode.write_subgraph_dots(), when inside
-    each search tree node, I draw the entire network and then blend out the parts I don't need, so that the subgraphs are
-    more comparable.
-'''
-root_graph = None
-
 num_nodes = 0
 class DecompositionNode:
 
-    def __init__(self, pred, labelled_subgraph, is_bag):
+    def __init__(self, pred, labelled_subnet, is_bag):
         self.predecessor = pred
-        self.subgraph = labelled_subgraph
+        self.subnet = labelled_subnet
         self.successors = []
         self.is_bag = is_bag
         self.strategy = None
@@ -53,9 +46,9 @@ class DecompositionNode:
 
     def decompose_subgraph(self):
         assert self.is_bag
-        components = network.decompose_into_connected_components(self.subgraph)
+        components = network.decompose_into_connected_components(self.subnet)
         for comp in components:
-            edge_child = DecompositionNode(pred=self, labelled_subgraph=comp, is_bag=False)
+            edge_child = DecompositionNode(pred=self, labelled_subnet=comp, is_bag=False)
             self.add_child(edge_child)
 
     def extract_tree_decomposition(self):
@@ -66,27 +59,27 @@ class DecompositionNode:
             child_decomposition = succ.extract_tree_decomposition()
             children.append(child_decomposition)
         tree_decomposition = treedec.TreeDecomposition(
-            bag=self.subgraph.cops,
+            bag=self.subnet.cops,
             tree_id=self.id,
             children=children,
             treewidth=self.treewidth,
             joinwidth=self.joinwidth)
         return tree_decomposition
 
-    def write_subgraph_dots(self):
+    def write_subnet_dots(self):
         dot = ''
         shell = ''
         for child in self.successors:
-            child_dot, child_shell = child.write_subgraph_dots()
+            child_dot, child_shell = child.write_subnet_dots()
             dot += child_dot
             shell += child_shell
 
         node_name = f'b{self.id}' if self.is_bag else f'e{self.id}'
         shell += f'dot -Tsvg -o svg/{node_name}.svg dot/{node_name}.dot\n'
-        graph_dot = self.subgraph.dot_string(supergraph=root_graph)
+        network_dot = self.subnet.visualize()
         graph_dot_path = f'dot/{node_name}.dot'
         with open(graph_dot_path, 'w') as f:
-            f.write(graph_dot)
+            f.write(network_dot)
 
         if self.is_bag:
             node_color = '#ff8c00b2'
@@ -118,7 +111,7 @@ class DecompositionNode:
         dot = 'digraph {\n'
         dot += 'edge [penwidth=3]\n'
         dot += 'node [style=filled, color=aliceblue]\n'
-        dot_nodes_string, shell = self.write_subgraph_dots()
+        dot_nodes_string, shell = self.write_subnet_dots()
         dot += dot_nodes_string
         dot += '}'
         with open(f'dot/{network_name}.dot', 'w') as f:
@@ -150,7 +143,7 @@ class DecompositionNode:
         node_type = 'Bag' if self.is_bag else 'Edge'
         s += f'The status at {node_type} {self.id} is {self.status}.\n'
         s += f'The chosen successor at {node_type} {self.id} is {self.strategy}.\n'
-        s += f'The subgraph at {node_type} {self.id} is\n{self.subgraph}\n'
+        s += f'The subnet at {node_type} {self.id} is\n{self.subnet}\n'
         return s
 
 '''
@@ -158,9 +151,7 @@ class DecompositionNode:
     tree decomposition.
 '''
 def compute_tree_decomposition(split_graph, maximum_bag_size):
-    global root_graph
-    root_graph = split_graph
-    node = DecompositionNode(pred=None, labelled_subgraph=split_graph, is_bag=True)
+    node = DecompositionNode(pred=None, labelled_subnet=split_graph, is_bag=True)
     node.decompose_subgraph()
     logging.debug(f'Input network has {len(node.successors)} connected components.')
     while 1:
@@ -183,7 +174,7 @@ def compute_tree_decomposition(split_graph, maximum_bag_size):
 
             unknown_bag_edges = [edge for edge in bag.successors if edge.status == UNKNOWN]
             if unknown_bag_edges:
-                unknown_subgraphs = [edge.subgraph for edge in unknown_bag_edges]
+                unknown_subgraphs = [edge.subnet for edge in unknown_bag_edges]
                 index = choose_weakest_component(unknown_subgraphs)
                 node = unknown_bag_edges[index]
             else:
@@ -195,7 +186,7 @@ def compute_tree_decomposition(split_graph, maximum_bag_size):
                     bag_degree += 1
 
                 # determine the treewidth for the tree under this bag
-                my_treewidth = len(bag.subgraph.cops)-1
+                my_treewidth = len(bag.subnet.cops)-1
                 if bag_degree >= 3:
                     my_joinwidth = my_treewidth
                 else:
@@ -224,16 +215,16 @@ def compute_tree_decomposition(split_graph, maximum_bag_size):
                 node = edge.predecessor
                 continue
 
-            known_cops = [bag.subgraph.new_cop for bag in edge.successors]
-            choosable_cops = compute_choosable_cops(edge.subgraph, known_cops, maximum_bag_size)
+            known_cops = [bag.subnet.new_cop for bag in edge.successors]
+            choosable_cops = compute_choosable_cops(edge.subnet, known_cops, maximum_bag_size)
             if choosable_cops:
-                index = choose_strongest_cop(edge.subgraph, choosable_cops)
+                index = choose_strongest_cop(edge.subnet, choosable_cops)
 
                 # create a new bag on the fly
                 cop = choosable_cops[index]
-                split_subgraph = edge.subgraph.copy()
+                split_subgraph = edge.subnet.copy()
                 split_subgraph.place(cop)
-                bag_child = DecompositionNode(pred=edge, labelled_subgraph=split_subgraph, is_bag=True)
+                bag_child = DecompositionNode(pred=edge, labelled_subnet=split_subgraph, is_bag=True)
                 bag_child.decompose_subgraph()
                 edge.add_child(bag_child)
 
@@ -292,8 +283,8 @@ def search_for_tree_decomposition(network_name, given_maximum_bag_size, precompu
         return None
 
     # visualize the computed search tree
-    # if network_name is not None:
-    #     search_tree.write_dot(network_name)
+    if network_name is not None:
+        search_tree.write_dot(network_name)
 
     # extract the found tree decomposition from the constructed search tree
     tree_decomposition = search_tree.extract_tree_decomposition()
