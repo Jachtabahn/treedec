@@ -75,37 +75,34 @@ The file *info.json* will contain flat information about the network, like the n
 
 ## Organize my data
 
-Data from the perspective of the instances:
-1. All structures
+A. Network structure
 * network edges
-* structure of every known tree decomposition
-    * for each node, a list of bagged vertices
-    * edges between the nodes
-2. Flat information
+
+B. Tree decomposition structure
+* list of bagged vertices for every node
+* tree edges
+
+1. Network instance
+* network name
+* name of category of networks ('easy' or 'hard')
+* path to the .gr file
 * number of vertices
 * number of edges
-* instance name
-* flat information about every known tree decomposition
-    * treewidth
-    * joinwidth
-    * number of nodes
-    * name of the solver
-    * number of join nodes
-    * number of edges
-    * list of runtimes, that were sampled while computing this exact tree decomposition
 
-Data from the perspective of the solvers:
-1. All structures
-    * structure of every known instance
-        * network edges
-2. Flat information
-* number of known instances
-* flat information about every known instance and its tree decomposition:
-    * number of vertices
-    * number of edges
-    * name of the instance
-    * list of runtimes, that were sampled while computing this exact tree decomposition
+2. Tree decomposition
+* network name
+* solver name
+* additional parameters to the solver
+* path to the .td file
+* number of nodes
+* number of join nodes
+* number of edges
+* treewidth
+* joinwidth
+* list of runtimes of above solver to compute this exact tree decomposition
 
-instance -> solvers -> treedec
-
-solver -> instances -> treedec
+3. Solver
+* solver name
+* solver title
+* path to the working directory of solver
+* solver command
