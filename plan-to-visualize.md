@@ -45,7 +45,7 @@ Given a network file, for example ClebschGraph.gr.
     └── structs/
         ├── network.gr
 
-The file *info.json* will contain basic easily computable information about the network, like the number of nodes, edges, the network's name.
+The file *info.json* will contain flat information about the network, like the number of nodes, edges, the network's name, and for all the known tree decompositions of the network, their treewidths, joinwidths, number of nodes, and so on.
 
 2. Compute tree decompositions using various solvers:
     ClebschGraph/
@@ -72,3 +72,40 @@ The file *info.json* will contain basic easily computable information about the 
         ├── habimm.td
         ├── meiji2016.td
         └── utrecht.td
+
+## Organize my data
+
+Data from the perspective of the instances:
+1. All structures
+* network edges
+* structure of every known tree decomposition
+    * for each node, a list of bagged vertices
+    * edges between the nodes
+2. Flat information
+* number of vertices
+* number of edges
+* instance name
+* flat information about every known tree decomposition
+    * treewidth
+    * joinwidth
+    * number of nodes
+    * name of the solver
+    * number of join nodes
+    * number of edges
+    * list of runtimes, that were sampled while computing this exact tree decomposition
+
+Data from the perspective of the solvers:
+1. All structures
+    * structure of every known instance
+        * network edges
+2. Flat information
+* number of known instances
+* flat information about every known instance and its tree decomposition:
+    * number of vertices
+    * number of edges
+    * name of the instance
+    * list of runtimes, that were sampled while computing this exact tree decomposition
+
+instance -> solvers -> treedec
+
+solver -> instances -> treedec
