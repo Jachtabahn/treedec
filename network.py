@@ -144,7 +144,7 @@ def parse(file):
         If it is called a second time, the function will continue to read the file,
         where it left off last time, namely at the end and read nothing.
     '''
-    graph = Graph()
+    graph = None
     for line in file:
         if line[0] == 'c': continue
 
@@ -152,10 +152,17 @@ def parse(file):
             line = line[:-1]
         info = line.split(' ')
         if line[0] == 'p':
+            if len(info) < 3:
+                logging.error(f'The problem line has too few words!')
+                return None
             num_vertices = int(info[2])
+            graph = Graph()
             for v in range(num_vertices):
                 graph.adjacent[v+1] = []
         else:
+            if graph is None:
+                logging.error(f'Encountered a non-comment line before the problem line!')
+                return None
             tail, head = int(info[0]), int(info[1])
             graph.adjacent[tail].append(head)
     return graph
