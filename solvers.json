@@ -1,0 +1,18 @@
+{
+    "meiji2016": {
+        "working_directory": "/home/tischler/treedec/solvers/meiji2016",
+        "command": "./tw-exact"
+    },
+    "meiji2017": {
+        "working_directory": "/home/tischler/treedec/solvers/meiji2017",
+        "command": "java -Xmx8g -Xms4g -Xss10m tw.exact.MainDecomposer"
+    },
+    "utrecht": {
+        "working_directory": "/home/tischler/treedec/solvers/utrecht",
+        "command": "./bin/BZTreewidth-DFS.exe"
+    },
+    "luebeck": {
+        "working_directory": "/home/tischler/treedec/solvers/luebeck",
+        "command": "java -jar build/jars/Jdrasil.jar"
+    }
+}
