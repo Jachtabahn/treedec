@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title id="head-title"></title>
+
+    <!-- Bootstrap and vis.js -->
+    <link href="../../libs/bootstrap-4.3.1/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="../../libs/vis-network/vis-network.css" rel="stylesheet" type="text/css" />
+    <script src="../../libs/vis-network/vis-network.js"></script>
+    <script src="../../vis-options.js"></script>
+
+    <script src="info.js"></script>
+
+    <!-- All the structure visualizations -->
+    <script src="visuals/network.dot.js"></script>
+    <script src="visuals/habimm.dot.js"></script>
+    <script src="visuals/meiji2016.dot.js"></script>
+    <script src="visuals/meiji2017.dot.js"></script>
+    <script src="visuals/utrecht.dot.js"></script>
+    <script src="visuals/luebeck.dot.js"></script>
+</head>
+<body>
+    <h2 align="center" id="main-title"></h2>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <td><table class="table" id="network-table"></table></td>
+                <td><div style="float: right" id="network"></div></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div id="treedecs"></div>
+
+    <script>
+
+        function displayStructure(dotString, elementId, options) {
+            networkData = vis.network.convertDot(dotString)
+            container = document.getElementById(elementId)
+            network = new vis.Network(container, networkData, options)
+        }
+
+        function fillTable(tableId, structureInfo, keyNames) {
+            tableBody = document.createElement("tbody")
+            Object.keys(structureInfo).forEach(function(key, i) {
+                if (key == "treedecs" || key == "name" || key == "schema" || key == "dot") { return }
+                keyCell = document.createElement("td")
+                valueCell = document.createElement("td")
+                boldCell = document.createElement("b")
+                boldCell.textContent = keyNames[key]
+                valueCell.textContent = structureInfo[key]
+
+                tableRow = document.createElement("tr")
+                keyCell.appendChild(boldCell)
+                tableRow.appendChild(keyCell)
+                tableRow.appendChild(valueCell)
+                tableBody.appendChild(tableRow)
+            });
+            networkTable = document.getElementById(tableId)
+            networkTable.appendChild(tableBody)
+        }
+
+        function createTreedecTable(treedecId, treedecName) {
+            tableBody = document.createElement("tbody")
+
+            largerCell = document.createElement("h4")
+            largerCell.textContent = treedecName + " tree decomposition"
+            captionCell = document.createElement("td")
+            captionCell.appendChild(largerCell)
+            captionRow = document.createElement("tr")
+
+            captionRow.appendChild(captionCell)
+
+            tableBody.appendChild(captionRow)
+
+            contentRow = document.createElement("tr")
+
+            visualContainer = document.createElement("div")
+            visualContainer.id = treedecId
+            visualCell = document.createElement("td")
+            visualCell.appendChild(visualContainer)
+            contentRow.appendChild(visualCell)
+
+            infoTable = document.createElement("table")
+            infoTable.setAttribute("class", "table");
+            infoTable.id = treedecId + "-table"
+            tableCell = document.createElement("td")
+            tableCell.appendChild(infoTable)
+
+            contentRow.appendChild(tableCell)
+
+            tableBody.appendChild(contentRow)
+
+            treedecTable = document.createElement("table")
+            treedecTable.setAttribute("class", "table");
+            treedecTable.appendChild(tableBody)
+
+            treedecsDiv = document.getElementById("treedecs")
+            treedecsDiv.appendChild(treedecTable)
+        }
+
+        function displayTreedec(treedecId) {
+            if (!(treedecId in info.treedecs)) { return }
+            createTreedecTable(treedecId, info.treedecs[treedecId].name)
+            if ("dot" in info.treedecs[treedecId]) {
+                displayStructure(info.treedecs[treedecId].dot, treedecId, treedecOptions)
+            }
+            fillTable(treedecId + "-table", info.treedecs[treedecId], info.schema)
+        }
+
+        document.getElementById("head-title").textContent = info.name
+        document.getElementById("main-title").textContent = info.name
+
+        displayStructure(info.dot, "network", networkOptions)
+        fillTable("network-table", info, info.schema)
+
+        displayTreedec("habimm")
+        displayTreedec("meiji2016")
+        displayTreedec("meiji2017")
+        displayTreedec("utrecht")
+        displayTreedec("luebeck")
+
+    </script>
+</body>
+</html>
