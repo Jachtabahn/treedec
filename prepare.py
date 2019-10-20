@@ -5,16 +5,6 @@ import os
 from os import path
 import json
 
-info_schema = {
-    'origin': 'Origin',
-    'vertices': 'Vertices',
-    'edges': 'Edges',
-    'nodes': 'Nodes',
-    'join_nodes': 'Join nodes',
-    'treewidth': 'Treewidth',
-    'joinwidth': 'Joinwidth'
-}
-
 def makedir(directory_path):
     if not path.exists(directory_path):
         os.mkdir(directory_path)
@@ -25,7 +15,7 @@ if __name__ == '__main__':
         help='Path to folder with input networks')
     parser.add_argument('--server', '-s', dest='server_dir', type=str, required=True,
         help='Path to folder, where to put the visualization folders for the networks')
-    parser.add_argument('--origin', '-o', type=str)
+    parser.add_argument('--category', '-o', type=str)
     parser.add_argument('--verbose', '-v', action='count')
     args = parser.parse_args()
 
@@ -49,8 +39,9 @@ if __name__ == '__main__':
         # check if this is a real network
         filepath = f'{args.networks_dir}/{filename}'
         with open(filepath) as file:
-            structure = network.parse(file)
-            if structure is None:
+            my_network = network.parse(file)
+            my_network.make_symmetric() # need to do this to get the number of vertices below
+            if my_network is None:
                 logging.warning(f'Error parsing network file {filepath}; ignoring..')
                 continue
 
@@ -59,6 +50,7 @@ if __name__ == '__main__':
         makedir(f'{args.server_dir}/{structure_name}/structs')
         makedir(f'{args.server_dir}/{structure_name}/visuals')
 
+        # Copy the network structure to the server
         with open(f'{args.server_dir}/{structure_name}/structs/network.gr', 'w') as dest_file:
             with open(filepath) as file:
                 network_string = file.read()
@@ -67,12 +59,32 @@ if __name__ == '__main__':
         with open(f'{args.server_dir}/{structure_name}/info.js', 'w') as info_file:
             info_file.write('var info =\n')
             info = {
-                'name': structure_name,
-                'origin': args.origin
+                'network_name': structure_name,
+                'network_title': structure_name,
+                'category': args.category,
+                'vertices': len(my_network.vertices()),
+                'edges': len(my_network.one_directional()),
+                'treedecs': {},
+                'schema': {
+                    'network_name': 'Network ID',
+                    'network_title': 'Network',
+                    'solver_title': 'Solver',
+                    'treedec_title': 'Tree decomposition',
+                    'category': 'Category',
+                    'vertices': 'Vertices',
+                    'edges': 'Edges',
+                    'title': 'Title',
+                    'nodes': 'Nodes',
+                    'join_nodes': 'Join nodes',
+                    'treewidth': 'Treewidth',
+                    'joinwidth': 'Joinwidth'
+                }
             }
             info_file.write(json.dumps(info, indent=4))
 
-        with open(f'{args.server_dir}/{structure_name}/index.html', 'w') as index_file:
-            with open('/home/tischler/treedec/habimm/network_template.html') as template_file:
-                index_string = template_file.read()
-                index_file.write(index_string)
+        # Create a hard link in this network's directory to this project's index template
+        index_path = f'{args.server_dir}/{structure_name}/index.html'
+        if not path.exists(index_path):
+            os.link(
+                '/home/tischler/treedec/habimm/network_template.html',
+                index_path)
