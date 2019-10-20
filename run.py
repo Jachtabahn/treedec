@@ -5,6 +5,17 @@ import subprocess
 import json
 import argparse
 import logging
+import treedec
+
+def write_info(info_path, info):
+    with open(info_path, 'w') as file:
+        file.write('var info =\n')
+        file.write(json.dumps(info, indent=4))
+
+def read_info(info_path):
+    with open(info_path) as file:
+        file.readline() # consume the first javascript line
+        return json.load(file)
 
 def time_run(command_dir, command_list, input_filepath, output_filepath, often):
     runtimes = []
@@ -37,6 +48,10 @@ if __name__ == '__main__':
     args.networks = path.normpath(args.networks)
     args.solvers_json = path.normpath(args.solvers_json)
 
+    if args.often < 1:
+        logging.error('Must run the solvers at least once.')
+        exit(1)
+
     log_levels = {
         None: logging.WARNING,
         1: logging.INFO,
@@ -49,18 +64,35 @@ if __name__ == '__main__':
     with open(args.solvers_json) as f:
         solvers = json.load(f)
 
-    for network_directory in sorted(os.listdir(args.networks)):
+    all_directories = sorted(os.listdir(args.networks))
+    for i, network_directory in enumerate(all_directories):
         netpath = f'{args.networks}/{network_directory}/structs/network.gr'
+        info_path = f'{args.networks}/{network_directory}/info.js'
         if not path.exists(netpath):
             logging.warning(f'Skipping network {netpath}')
             continue
 
-        for name, info in solvers.items():
-            solver_treedec_path = f'{args.networks}/{network_directory}/structs/{name}.td'
-            runtimes = time_run(info['working_directory'], info['command'].split(), netpath, solver_treedec_path, args.often)
+        start = time.time()
+        for solver_name, solver_info in solvers.items():
+            solver_treedec_path = f'{args.networks}/{network_directory}/structs/{solver_name}.td'
+            runtimes = time_run(solver_info['working_directory'], solver_info['command'].split(), netpath, solver_treedec_path, args.often)
             if runtimes is None:
-                logging.warning(f'Skipping running solver {name} on network {netpath}')
-            else:
-                pass
+                logging.warning(f'Solver {solver_name} failed at network {netpath}')
+                continue
 
-        logging.debug(f'Done {network_directory}.')
+            # Update network information
+            with open(solver_treedec_path) as file:
+                my_treedec = treedec.parse(file)
+            my_treewidth, my_joinwidth = my_treedec.compute_widths()
+            network_info = read_info(info_path)
+            if 'treedecs' not in network_info:
+                network_info['treedecs'] = {}
+            if solver_name not in network_info['treedecs']:
+                network_info['treedecs'][solver_name] = {}
+            network_info['treedecs'][solver_name]['treewidth'] = my_treewidth
+            network_info['treedecs'][solver_name]['joinwidth'] = my_joinwidth
+            solver_title = solver_info['solver_title']
+            network_info['treedecs'][solver_name]['treedec_title'] = f'{solver_title} tree decomposition'
+            write_info(info_path, network_info)
+
+        logging.info(f'Done {network_directory} in {time.time() - start}s: {i+1}/{len(all_directories)}.')
