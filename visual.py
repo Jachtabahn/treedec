@@ -13,32 +13,39 @@ def exists(my_path):
     if my_path is None: return False
     return path.exists(my_path)
 
-def visualize_structures(networks_dir, structs_dir):
-    if networks_dir is None:
-        structure_paths = [structs_dir]
+def visualize_structures(visualization_path, network_path):
+    if visualization_path is None:
+        network_paths = [network_path]
     else:
-        structure_paths = []
-        for network_dir in os.listdir(networks_dir):
-            structure_path = path.join(networks_dir, network_dir)
-            structure_paths.append(structure_path)
+        network_paths = []
+        for network_dirname in os.listdir(visualization_path):
+            network_path = path.join(visualization_path, network_dirname)
+            network_paths.append(network_path)
 
-    for structure_path in structure_paths:
-        logging.info(f'Visualizing structures in {structure_path}')
-        for filename in os.listdir(structure_path):
-            filepath = path.join(structs_dir, filename)
-            structure_name = filename[:-3]
+    for i, network_path in enumerate(sorted(network_paths)):
+        logging.info(f'Visualizing structures in {network_path}: {i+1}/{len(network_paths)}.')
+        network_structures_path = path.join(network_path, 'structs')
+        for structure_filename in os.listdir(network_structures_path):
+            filepath = path.join(network_structures_path, structure_filename)
+            structure_name = structure_filename[:-3]
 
-            if filename[-3:] == '.gr':
+            if structure_filename[-3:] == '.gr':
                 with open(filepath) as struct_file:
                     structure = network.parse(struct_file)
+                if structure is None:
+                    logging.warning(f'Skipping invalid structure {filepath}')
+                    continue
 
                 # create a dot string from the parsed structure
                 dot_string = 'info.dot = `\n'
                 dot_string += structure.visualize()
                 dot_string += '`\n'
-            elif filename[-3:] == '.td':
+            elif structure_filename[-3:] == '.td':
                 with open(filepath) as struct_file:
                     structure = treedec.parse(struct_file)
+                if structure is None:
+                    logging.warning(f'Skipping invalid structure {filepath}')
+                    continue
 
                 # create a dot string from the parsed structure
                 dot_string = f'if ("{structure_name}" in info.treedecs) '
@@ -47,28 +54,27 @@ def visualize_structures(networks_dir, structs_dir):
                 dot_string += structure.visualize()
                 dot_string += '`}\n'
             else:
-                logging.warning(f'Ignoring file {filename} with unknown extension.')
+                logging.warning(f'Ignoring file {structure_filename} with unknown extension.')
                 continue
 
             # write that dot string to a file
-            network_dir, _ = structs_dir.split()
-            visual_path = path.join(network_dir, 'visuals')
-            if path.exists(visual_path):
-                logging.warning(f'Overwriting file {visual_path}..')
+            dot_path = path.join(network_path, 'visuals', f'{structure_name}.dot.js')
+            if path.exists(dot_path):
+                logging.debug(f'Overwriting file {dot_path}..')
             else:
-                logging.info(f'Creating new file {visual_path}..')
-            with open(visual_path, 'w') as visual_file:
+                logging.debug(f'Creating new file {dot_path}..')
+            with open(dot_path, 'w') as visual_file:
                 visual_file.write(dot_string)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--networks-dir', '-n', type=str)
-    parser.add_argument('--structs-dir', '-s', type=str)
+    parser.add_argument('--visualization-path', '-d', type=str)
+    parser.add_argument('--network-path', '-n', type=str)
     parser.add_argument('--verbose', '-v', action='count')
     args = parser.parse_args()
 
-    args.networks_dir = normpath(args.networks_dir)
-    args.structs_dir = normpath(args.structs_dir)
+    args.visualization_path = normpath(args.visualization_path)
+    args.network_path = normpath(args.network_path)
 
     log_levels = {
         None: logging.WARNING,
@@ -79,13 +85,13 @@ if __name__ == '__main__':
         args.verbose = len(log_levels)-1
     logging.basicConfig(format='%(message)s', level=log_levels[args.verbose])
 
-    if exists(args.networks_dir):
-        logging.info(f'Visualization whole networks directory {args.networks_dir}')
-    elif exists(args.structs_dir) and exists(args.structs_dir):
-        logging.info(f'Visualizing specific network at {args.structs_dir}')
-        args.networks_dir = None
+    if exists(args.visualization_path):
+        logging.info(f'Visualization whole networks directory {args.visualization_path}')
+    elif exists(args.network_path):
+        logging.info(f'Visualizing specific network at {args.network_path}')
+        args.visualization_path = None
     else:
-        logging.error(f'At least one of --networks, or --structs_dir and --visuals_dir is required!')
+        logging.error(f'One of --visualization-path or --network_path is required!')
         exit(1)
 
-    visualize_structures(args.networks_dir, args.structs_dir)
+    visualize_structures(args.visualization_path, args.network_path)
