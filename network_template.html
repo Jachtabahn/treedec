@@ -44,7 +44,7 @@
         function fillTable(tableId, structureInfo, keyNames) {
             tableBody = document.createElement("tbody")
             Object.keys(structureInfo).forEach(function(key, i) {
-                if (key == "treedecs" || key == "name" || key == "schema" || key == "dot") { return }
+                if (typeof structureInfo[key] === 'object' || key == "dot") { return }
                 keyCell = document.createElement("td")
                 valueCell = document.createElement("td")
                 boldCell = document.createElement("b")
@@ -61,11 +61,11 @@
             networkTable.appendChild(tableBody)
         }
 
-        function createTreedecTable(treedecId, treedecName) {
+        function createTreedecTable(treedecName, treedecTitle) {
             tableBody = document.createElement("tbody")
 
             largerCell = document.createElement("h4")
-            largerCell.textContent = treedecName + " tree decomposition"
+            largerCell.textContent = treedecTitle
             captionCell = document.createElement("td")
             captionCell.appendChild(largerCell)
             captionRow = document.createElement("tr")
@@ -77,14 +77,14 @@
             contentRow = document.createElement("tr")
 
             visualContainer = document.createElement("div")
-            visualContainer.id = treedecId
+            visualContainer.id = treedecName
             visualCell = document.createElement("td")
             visualCell.appendChild(visualContainer)
             contentRow.appendChild(visualCell)
 
             infoTable = document.createElement("table")
             infoTable.setAttribute("class", "table");
-            infoTable.id = treedecId + "-table"
+            infoTable.id = treedecName + "-table"
             tableCell = document.createElement("td")
             tableCell.appendChild(infoTable)
 
@@ -100,17 +100,17 @@
             treedecsDiv.appendChild(treedecTable)
         }
 
-        function displayTreedec(treedecId) {
-            if (!(treedecId in info.treedecs)) { return }
-            createTreedecTable(treedecId, info.treedecs[treedecId].name)
-            if ("dot" in info.treedecs[treedecId]) {
-                displayStructure(info.treedecs[treedecId].dot, treedecId, treedecOptions)
+        function displayTreedec(treedecName) {
+            if (!(treedecName in info.treedecs)) { return }
+            createTreedecTable(treedecName, info.treedecs[treedecName].treedec_title)
+            if ("dot" in info.treedecs[treedecName]) {
+                displayStructure(info.treedecs[treedecName].dot, treedecName, treedecOptions)
             }
-            fillTable(treedecId + "-table", info.treedecs[treedecId], info.schema)
+            fillTable(treedecName + "-table", info.treedecs[treedecName], info.schema)
         }
 
-        document.getElementById("head-title").textContent = info.name
-        document.getElementById("main-title").textContent = info.name
+        document.getElementById("head-title").textContent = info.network_title
+        document.getElementById("main-title").textContent = info.network_title
 
         displayStructure(info.dot, "network", networkOptions)
         fillTable("network-table", info, info.schema)
