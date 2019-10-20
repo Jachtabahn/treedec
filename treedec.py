@@ -19,6 +19,22 @@ class TreeDecomposition:
         self.treewidth = treewidth
         self.joinwidth = joinwidth
 
+    def compute_widths(self, is_root=True):
+        my_treewidth = len(self.bag)-1
+        node_degree = len(self.children)
+        if not is_root: node_degree += 1
+        if node_degree >= 3:
+            my_joinwidth = my_treewidth
+        else:
+            my_joinwidth = -1
+        for child in self.children:
+            child_treewidth, child_joinwidth = child.compute_widths(is_root=False)
+            if child_treewidth > my_treewidth: my_treewidth = child_treewidth
+            if child_joinwidth > my_joinwidth: my_joinwidth = child_joinwidth
+        self.treewidth = my_treewidth
+        self.joinwidth = my_joinwidth
+        return self.treewidth, self.joinwidth
+
     def extract_bags(self, vertex):
         if vertex in self.bag:
             vertex_bags = [self.id]
@@ -161,7 +177,7 @@ def parse(file):
             line = line[:-1]
         info = line.split(' ')
         if line[0] == 'b':
-            bag_content = info[1:]
+            bag_content = info[2:]
             convert_to_ints(bag_content)
             tree_decomposition = TreeDecomposition(bag_content, index, [])
             index += 1
@@ -169,6 +185,9 @@ def parse(file):
         else:
             convert_to_ints(info)
             edges.append(info)
+    if not trees:
+        logging.error('Tree decomposition with no bags is invalid.')
+        return None
     fill_up(trees, 1, [], edges)
     return trees[0]
 
