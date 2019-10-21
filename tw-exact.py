@@ -4,6 +4,7 @@ import treedec
 import argparse
 from os import path
 import sys
+import json
 
 UNKNOWN = 0
 FAILED = 1
@@ -262,20 +263,22 @@ def compute_choosable_cops(escape_component, known_cops, maximum_bag_size):
             choosable.append(vertex)
     return choosable
 
-def search_for_tree_decomposition(network_name, given_maximum_bag_size, precomputed_treedec_path):
+def search_for_tree_decomposition(network_name, given_maximum_bag_size, treewidths_json):
     input_network = network.parse(sys.stdin)
 
-    if given_maximum_bag_size is None and precomputed_treedec_path is None:
+    if given_maximum_bag_size is None and treewidths_json is None:
         logging.error('Please provide a maximum bag size or a path to a precomputed tree decomposition, where to find the max. bag size')
         exit(1)
     if given_maximum_bag_size is not None:
         maximum_bag_size = given_maximum_bag_size
         logging.info(f'Using the provided max. bag size {maximum_bag_size}')
     else:
-        maximum_bag_size = treedec.extract_bag_size(precomputed_treedec_path)
-        if maximum_bag_size is None:
-            logging.error(f'Failed to extract the maximum bag size from path {precomputed_treedec_path}')
+        with open(treewidths_json) as file:
+            treewidths_database = json.load(file)
+        if network_name not in treewidths_database:
+            logging.error(f'Did not find network {network_name} in the treewidths database {treewidths_json}.')
             exit(1)
+        maximum_bag_size = treewidths_database[network_name] + 1
         logging.info(f'Extracted the max. bag size {maximum_bag_size}')
 
     logging.info(f'I initiate search for a tree decomposition of width at most {maximum_bag_size-1} for the network:\n{input_network}')
@@ -288,8 +291,8 @@ def search_for_tree_decomposition(network_name, given_maximum_bag_size, precompu
         return None
 
     # visualize the computed search tree
-    if network_name is not None:
-        search_tree.write_dot(network_name)
+    # if network_name is not None:
+    #     search_tree.write_dot(network_name)
 
     # extract the found tree decomposition from the constructed search tree
     tree_decomposition = search_tree.extract_tree_decomposition()
@@ -311,7 +314,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--network-name', '-g', default=None)
     parser.add_argument('--maximum-bag-size', '-b', type=int, default=None)
-    parser.add_argument('--precomputed-treedec-path', '-w', type=str, default=None)
+    parser.add_argument('--treewidths-json', '-t', type=str, default=None)
     parser.add_argument('--verbose', '-v', action='count')
     args = parser.parse_args()
 
@@ -324,4 +327,4 @@ if __name__ == '__main__':
         args.verbose = len(log_levels)-1
     logging.basicConfig(format='%(message)s', level=log_levels[args.verbose])
 
-    search_for_tree_decomposition(args.network_name, args.maximum_bag_size, args.precomputed_treedec_path)
+    search_for_tree_decomposition(args.network_name, args.maximum_bag_size, args.treewidths_json)
