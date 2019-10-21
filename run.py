@@ -71,11 +71,16 @@ if __name__ == '__main__':
         if not path.exists(netpath):
             logging.warning(f'Skipping network {netpath}')
             continue
+        logging.info(f'Working network {network_directory}: {i+1}/{len(all_directories)}..')
 
-        start = time.time()
+        network_start = time.time()
         for solver_name, solver_info in solvers.items():
+            solver_start = time.time()
+            logging.info(f'Launching solver {solver_name}..')
             solver_treedec_path = f'{args.networks}/{network_directory}/structs/{solver_name}.td'
-            runtimes = time_run(solver_info['working_directory'], solver_info['command'].split(), netpath, solver_treedec_path, args.often)
+            command = solver_info['command'].split()
+            command += ['-g', network_directory]
+            runtimes = time_run(solver_info['working_directory'], command, netpath, solver_treedec_path, args.often)
             if runtimes is None:
                 logging.warning(f'Solver {solver_name} failed at network {netpath}')
                 continue
@@ -94,5 +99,6 @@ if __name__ == '__main__':
             solver_title = solver_info['solver_title']
             network_info['treedecs'][solver_name]['treedec_title'] = f'{solver_title} tree decomposition'
             write_info(info_path, network_info)
+            logging.info(f'Solver {solver_name} finished in {time.time() - solver_start}s.')
 
-        logging.info(f'Done {network_directory} in {time.time() - start}s: {i+1}/{len(all_directories)}.')
+        logging.info(f'Done with network {network_directory} in {time.time() - network_start}s: {i+1}/{len(all_directories)}.')
