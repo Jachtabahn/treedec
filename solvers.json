@@ -1,4 +1,9 @@
 {
+    "habimm": {
+        "solver_title": "Habimm",
+        "working_directory": "/home/tischler/treedec/habimm",
+        "command": "python tw-exact.py -t /home/tischler/treedec/habimm/treewidths.json"
+    },
     "meiji2016": {
         "solver_title": "Meiji 2016",
         "working_directory": "/home/tischler/treedec/solvers/meiji2016",
