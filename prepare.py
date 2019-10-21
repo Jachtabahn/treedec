@@ -86,5 +86,5 @@ if __name__ == '__main__':
         index_path = f'{args.server_dir}/{structure_name}/index.html'
         if not path.exists(index_path):
             os.link(
-                '/home/tischler/treedec/habimm/network_template.html',
+                '/home/tischler/treedec/habimm/network_index.html',
                 index_path)

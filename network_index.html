@@ -44,7 +44,7 @@
         function fillTable(tableId, structureInfo, keyNames) {
             tableBody = document.createElement("tbody")
             Object.keys(structureInfo).forEach(function(key, i) {
-                if (typeof structureInfo[key] === 'object' || key == "dot") { return }
+                if (typeof structureInfo[key] === "object" || key == "network_name" || key == "dot") { return }
                 keyCell = document.createElement("td")
                 valueCell = document.createElement("td")
                 boldCell = document.createElement("b")
