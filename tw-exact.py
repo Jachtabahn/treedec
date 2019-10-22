@@ -280,58 +280,59 @@ def compute_choosable_cops(escape_component, known_cops, fixed_treewidth, fixed_
             choosable.append(vertex)
     return choosable
 
-def search_for_tree_decomposition(network_name, given_maximum_bag_size, treewidths_json):
+def search_for_tree_decomposition(network_name, treewidths_json, fixed_treewidth, fixed_joinwidth):
     input_network = network.parse(sys.stdin)
 
-    if given_maximum_bag_size is None and treewidths_json is None:
-        logging.error('Please provide a maximum bag size or a path to a precomputed tree decomposition, where to find the max. bag size')
-        exit(1)
-    if given_maximum_bag_size is not None:
-        maximum_bag_size = given_maximum_bag_size
-        logging.info(f'Using the provided max. bag size {maximum_bag_size}')
-    else:
+    if fixed_treewidth is None:
+        logging.info('Did not fix the treewidth directly.')
+
+        if treewidths_json is None or not path.exists(treewidths_json):
+            logging.error('The treewidths database path is invalid!')
+            return False
+
         with open(treewidths_json) as file:
             treewidths_database = json.load(file)
         if network_name not in treewidths_database:
             logging.error(f'Did not find network {network_name} in the treewidths database {treewidths_json}.')
-            exit(1)
-        maximum_bag_size = treewidths_database[network_name] + 1
-        logging.info(f'Extracted the max. bag size {maximum_bag_size}')
+            return False
+        fixed_treewidth = treewidths_database[network_name]
 
-    logging.info(f'I initiate search for a tree decomposition of width at most {maximum_bag_size-1} for the network:\n{input_network}')
+        # See what happens, when I increase the treewidth by one and decrease the joinwidth by one
+        fixed_joinwidth = fixed_treewidth
+        if fixed_treewidth > 1:
+            fixed_treewidth += 1
+            fixed_joinwidth -= 1
+
+        logging.info(f'Extracted treewidth {fixed_treewidth}')
+
+    if fixed_joinwidth is None:
+        logging.warning(f'Joinwidth not fixed; setting to {fixed_treewidth}')
+        fixed_joinwidth = fixed_treewidth
+
+    logging.info(f'Initiating search for a tree decomposition of width at most {fixed_treewidth} for following network.\n{input_network}')
     input_network.make_symmetric()
 
-    # search for a tree decomposition
-    search_tree, success = compute_tree_decomposition(input_network, maximum_bag_size)
-    if not success:
-        logging.error('I failed computing a tree decomposition.')
-        return None
-
-    # visualize the computed search tree
-    # if network_name is not None:
-    #     search_tree.write_dot(network_name)
+    logging.info(f'Treewidth is fixed to {fixed_treewidth}.')
+    logging.info(f'Joinwidth is fixed to {fixed_joinwidth}.')
+    search_tree, success = compute_tree_decomposition(input_network, fixed_treewidth, fixed_joinwidth)
+    if not success: return False
 
     # extract the found tree decomposition from the constructed search tree
     tree_decomposition = search_tree.extract_tree_decomposition()
-    if not tree_decomposition.validate(input_network):
-        logging.error('I computed an invalid tree decomposition.')
-        return None
-    logging.info(f'I found a valid tree decomposition of width at most {maximum_bag_size-1}.')
+    if not tree_decomposition.validate(input_network): return False
+    logging.info(f'Found a valid tree decomposition of width at most {fixed_treewidth}.')
     logging.debug(tree_decomposition)
 
     # save the computed tree decomposition
     tree_decomposition.save(sys.stdout)
-
-    # visualize the input network and the computed tree decomposition
-    # if network_name is not None:
-    #     input_network.write_dot(network_name)
-    #     tree_decomposition.write_dot(network_name)
+    return True
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--network-name', '-g', default=None)
-    parser.add_argument('--maximum-bag-size', '-b', type=int, default=None)
     parser.add_argument('--treewidths-json', '-t', type=str, default=None)
+    parser.add_argument('--fixed-treewidth', '-f', type=int, default=None)
+    parser.add_argument('--fixed-joinwidth', '-j', type=int, default=None)
     parser.add_argument('--verbose', '-v', action='count')
     args = parser.parse_args()
 
@@ -344,4 +345,12 @@ if __name__ == '__main__':
         args.verbose = len(log_levels)-1
     logging.basicConfig(format='%(message)s', level=log_levels[args.verbose])
 
-    search_for_tree_decomposition(args.network_name, args.maximum_bag_size, args.treewidths_json)
+    success = search_for_tree_decomposition(
+        args.network_name,
+        args.treewidths_json,
+        args.fixed_treewidth,
+        args.fixed_joinwidth)
+
+    if not success:
+        logging.error('Failed computing a tree decomposition.')
+        exit(1)
