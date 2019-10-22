@@ -60,22 +60,22 @@ if __name__ == '__main__':
             info_file.write('var info =\n')
             info = {
                 'network_name': structure_name,
-                'network_title': structure_name,
                 'category': args.category,
+                'network_title': structure_name,
                 'vertices': len(my_network.vertices()),
                 'edges': len(my_network.one_directional()),
                 'treedecs': {},
                 'schema': {
                     'network_name': 'Network ID',
-                    'network_title': 'Network',
-                    'solver_title': 'Solver',
-                    'treedec_title': 'Tree decomposition',
                     'category': 'Category',
+                    'solver_title': 'Solver',
+                    'network_title': 'Network',
+                    'treedec_title': 'Tree decomposition',
+
                     'vertices': 'Vertices',
-                    'edges': 'Edges',
-                    'title': 'Title',
                     'nodes': 'Nodes',
                     'join_nodes': 'Join nodes',
+                    'edges': 'Edges',
                     'treewidth': 'Treewidth',
                     'joinwidth': 'Joinwidth'
                 }
