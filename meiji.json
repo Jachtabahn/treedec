@@ -1,0 +1,7 @@
+{
+    "meiji2016": {
+        "solver_title": "Meiji 2016",
+        "working_directory": "/home/tischler/treedec/solvers/meiji2016",
+        "command": "./tw-exact"
+    }
+}
