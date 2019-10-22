@@ -12,28 +12,42 @@ def convert_to_ints(l):
 
 class TreeDecomposition:
 
-    def __init__(self, bag, tree_id, children, treewidth=None, joinwidth=None):
+    def __init__(self, bag, tree_id, children,
+        num_nodes=None, num_joins=None, num_edges=None, treewidth=None, joinwidth=None):
         self.bag = bag
         self.id = tree_id
         self.children = children
+
+        # additional helpful information
+        self.num_nodes = num_nodes
+        self.num_joins = num_joins
         self.treewidth = treewidth
         self.joinwidth = joinwidth
 
-    def compute_widths(self, is_root=True):
+    def collect_info(self, is_root=True):
         my_treewidth = len(self.bag)-1
         node_degree = len(self.children)
         if not is_root: node_degree += 1
         if node_degree >= 3:
+            my_num_joins = 1
             my_joinwidth = my_treewidth
         else:
+            my_num_joins = 0
             my_joinwidth = -1
+        my_num_nodes = 1
         for child in self.children:
-            child_treewidth, child_joinwidth = child.compute_widths(is_root=False)
+            child_num_nodes, child_num_joins, \
+            child_treewidth, child_joinwidth = child.collect_info(is_root=False)
+
+            my_num_joins += child_num_joins
+            my_num_nodes += child_num_nodes
             if child_treewidth > my_treewidth: my_treewidth = child_treewidth
             if child_joinwidth > my_joinwidth: my_joinwidth = child_joinwidth
+        self.num_joins = my_num_joins
+        self.num_nodes = my_num_nodes
         self.treewidth = my_treewidth
         self.joinwidth = my_joinwidth
-        return self.treewidth, self.joinwidth
+        return self.num_nodes, self.num_joins, self.treewidth, self.joinwidth
 
     def extract_bags(self, vertex):
         if vertex in self.bag:
