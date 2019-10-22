@@ -151,7 +151,7 @@ class DecompositionNode:
     Returns a pair of the search tree and a boolean indicating whether the search tree contains a valid
     tree decomposition.
 '''
-def compute_tree_decomposition(split_graph, maximum_bag_size):
+def compute_tree_decomposition(split_graph, fixed_treewidth, fixed_joinwidth):
     node = DecompositionNode(pred=None, labelled_subnet=split_graph, is_bag=True)
     node.decompose_subgraph()
     logging.debug(f'Input network has {len(node.successors)} connected components.')
@@ -159,7 +159,7 @@ def compute_tree_decomposition(split_graph, maximum_bag_size):
         if node.is_bag:
             bag = node
 
-            # quit on failure because we need every component to work out
+            # quit on failure, because we need every component to work out
             for edge in bag.successors:
                 if edge.status == FAILED:
                     bag.status = FAILED
@@ -204,7 +204,7 @@ def compute_tree_decomposition(split_graph, maximum_bag_size):
         else:
             edge = node
 
-            # quit on success because we only need some cop to work
+            # quit on success, because we only need some cop to work
             for bag in edge.successors:
                 if bag.status == SUCCESS:
                     edge.status = SUCCESS
@@ -212,18 +212,18 @@ def compute_tree_decomposition(split_graph, maximum_bag_size):
                     break
 
             if edge.status == SUCCESS:
-                # the predecessor of an edge will never be None because the single root is a bag
+                # the predecessor of an edge will never be None, because the single root is a bag
                 node = edge.predecessor
                 continue
 
+            escape_component = edge.subnet
             known_cops = [bag.subnet.new_cop for bag in edge.successors]
-            choosable_cops = compute_choosable_cops(edge.subnet, known_cops, maximum_bag_size)
+            choosable_cops = compute_choosable_cops(escape_component, known_cops, fixed_treewidth, fixed_joinwidth)
             if choosable_cops:
-                index = choose_strongest_cop(edge.subnet, choosable_cops)
+                cop = choose_strongest_cop(escape_component, choosable_cops)
 
                 # create a new bag on the fly
-                cop = choosable_cops[index]
-                split_subgraph = edge.subnet.copy()
+                split_subgraph = escape_component.copy()
                 split_subgraph.place(cop)
                 bag_child = DecompositionNode(pred=edge, labelled_subnet=split_subgraph, is_bag=True)
                 bag_child.decompose_subgraph()
@@ -246,20 +246,37 @@ def choose_weakest_component(unknown_subgraphs):
     Choose a cop that is most likely to succeed to decompose with the given maximum bag size
     The given list of choosable cops is not empty.
 '''
-def choose_strongest_cop(subnet, unknown_cops):
+def choose_strongest_cop(subnet, choosable_cops):
     # Without this check: in ClebschGraph.gr, Bag 46865 is a bag with a new cop that is not adjacent to any old cop
     # We want to not consider bags, where the new cop is not adjacent to any old cop
-    for i, cop_vertex in enumerate(unknown_cops):
-        if not set(subnet.adjacent[cop_vertex]).isdisjoint(subnet.cops):
-            return i
-    return 0
+    # for i, cop_vertex in enumerate(choosable_cops):
+    #     if not set(subnet.adjacent[cop_vertex]).isdisjoint(subnet.cops):
+    #         return i
+    return choosable_cops[0]
 
-def compute_choosable_cops(escape_component, known_cops, maximum_bag_size):
+def compute_choosable_cops(escape_component, known_cops, fixed_treewidth, fixed_joinwidth):
+    my_treewidth = len(escape_component.cops) - 1
+    if my_treewidth >= fixed_treewidth: return []
     choosable = []
-    if len(escape_component.cops) >= maximum_bag_size:
-        return choosable
     for vertex in escape_component.adjacent:
-        if not escape_component.is_cop(vertex) and vertex not in known_cops:
+        if escape_component.is_cop(vertex) or vertex in known_cops:
+            continue
+
+        # create a new bag on the fly
+        split_subgraph = escape_component.copy()
+        split_subgraph.place(vertex)
+        bag_child = DecompositionNode(pred=None, labelled_subnet=split_subgraph, is_bag=True)
+        bag_child.decompose_subgraph()
+
+        # this bag always has a predecessor bag, because this bag is attached to an edge
+        bag_degree = len(bag_child.successors) + 1
+        if bag_degree >= 3:
+            # + 1 because of the newly placed vertex
+            my_joinwidth = my_treewidth + 1
+        else:
+            my_joinwidth = -1
+
+        if my_joinwidth <= fixed_joinwidth:
             choosable.append(vertex)
     return choosable
 
