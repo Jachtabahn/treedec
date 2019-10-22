@@ -23,7 +23,14 @@ def time_run(command_dir, command_list, input_filepath, output_filepath, often):
         network_file = open(input_filepath)
         treedec_file = open(output_filepath, 'w')
         start = time.time()
-        try: subprocess.run(command_list, stdin=network_file, stdout=treedec_file, cwd=command_dir)
+        try:
+            solver_process = subprocess.run(
+                command_list,
+                stdin=network_file,
+                stdout=treedec_file,
+                cwd=command_dir,
+                timeout=30)
+            solver_process.check_returncode()
         except Exception as e:
             logging.error(f'Solver process executed abnormally!')
             logging.error(e)
@@ -88,16 +95,25 @@ if __name__ == '__main__':
             # Update network information
             with open(solver_treedec_path) as file:
                 my_treedec = treedec.parse(file)
-            my_treewidth, my_joinwidth = my_treedec.compute_widths()
+            my_num_nodes, my_num_joins, my_treewidth, my_joinwidth = my_treedec.collect_info()
             network_info = read_info(info_path)
             if 'treedecs' not in network_info:
                 network_info['treedecs'] = {}
             if solver_name not in network_info['treedecs']:
                 network_info['treedecs'][solver_name] = {}
-            network_info['treedecs'][solver_name]['treewidth'] = my_treewidth
-            network_info['treedecs'][solver_name]['joinwidth'] = my_joinwidth
-            solver_title = solver_info['solver_title']
-            network_info['treedecs'][solver_name]['treedec_title'] = f'{solver_title} tree decomposition'
+
+            # Fill in some info about this tree decomposition
+            my_info = network_info['treedecs'][solver_name]
+            my_info['network_name'] = network_directory
+            my_info['solver_title'] = solver_info['solver_title']
+            my_info['network_title'] = network_directory
+            my_info['treedec_title'] = f'{solver_info['solver_title']} tree decomposition'
+            my_info['nodes'] = my_num_nodes
+            my_info['join_nodes'] = my_num_joins
+            my_info['edges'] = my_num_nodes - 1
+            my_info['treewidth'] = my_treewidth
+            my_info['joinwidth'] = my_joinwidth
+
             write_info(info_path, network_info)
             logging.info(f'Solver {solver_name} finished in {time.time() - solver_start}s.')
 
