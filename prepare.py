@@ -51,36 +51,40 @@ if __name__ == '__main__':
         makedir(f'{args.server_dir}/{structure_name}/visuals')
 
         # Copy the network structure to the server
-        with open(f'{args.server_dir}/{structure_name}/structs/network.gr', 'w') as dest_file:
-            with open(filepath) as file:
-                network_string = file.read()
-                dest_file.write(network_string)
+        network_path = f'{args.server_dir}/{structure_name}/structs/network.gr'
+        if not path.exists(network_path):
+            with open(network_path, 'w') as dest_file:
+                with open(filepath) as file:
+                    network_string = file.read()
+                    dest_file.write(network_string)
 
-        with open(f'{args.server_dir}/{structure_name}/info.js', 'w') as info_file:
-            info_file.write('var info =\n')
-            info = {
-                'network_name': structure_name,
-                'category': args.category,
-                'network_title': structure_name,
-                'vertices': len(my_network.vertices()),
-                'edges': len(my_network.one_directional()),
-                'treedecs': {},
-                'schema': {
-                    'network_name': 'Network ID',
-                    'category': 'Category',
-                    'solver_title': 'Solver',
-                    'network_title': 'Network',
-                    'treedec_title': 'Tree decomposition',
+        info_path = f'{args.server_dir}/{structure_name}/info.js'
+        if not path.exists(info_path):
+            with open(info_path, 'w') as info_file:
+                info_file.write('var info =\n')
+                info = {
+                    'network_name': structure_name,
+                    'category': args.category,
+                    'network_title': structure_name,
+                    'vertices': len(my_network.vertices()),
+                    'edges': len(my_network.one_directional()),
+                    'treedecs': {},
+                    'schema': {
+                        'network_name': 'Network ID',
+                        'category': 'Category',
+                        'solver_title': 'Solver',
+                        'network_title': 'Network',
+                        'treedec_title': 'Tree decomposition',
 
-                    'vertices': 'Vertices',
-                    'nodes': 'Nodes',
-                    'join_nodes': 'Join nodes',
-                    'edges': 'Edges',
-                    'treewidth': 'Treewidth',
-                    'joinwidth': 'Joinwidth'
+                        'vertices': 'Vertices',
+                        'nodes': 'Nodes',
+                        'join_nodes': 'Join nodes',
+                        'edges': 'Edges',
+                        'treewidth': 'Treewidth',
+                        'joinwidth': 'Joinwidth'
+                    }
                 }
-            }
-            info_file.write(json.dumps(info, indent=4))
+                info_file.write(json.dumps(info, indent=4))
 
         # Create a hard link in this network's directory to this project's index template
         index_path = f'{args.server_dir}/{structure_name}/index.html'
