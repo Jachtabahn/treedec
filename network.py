@@ -2,7 +2,7 @@ from os import path
 import os
 import logging
 
-class Graph:
+class Network:
 
     def __init__(self, adjacent=None, cops=None):
         self.adjacent = adjacent if adjacent is not None else dict()
@@ -16,7 +16,7 @@ class Graph:
         copied_adjacent = dict()
         for vertex, neighbours in self.adjacent.items():
             copied_adjacent[vertex] = list(neighbours)
-        copied = Graph(copied_adjacent, list(self.cops))
+        copied = Network(copied_adjacent, list(self.cops))
         return copied
 
     def add(self, vertex, neighbours, is_cop):
@@ -79,7 +79,7 @@ class Graph:
         return dot_string
 
     def __str__(self):
-        s = '----------- Graph -----------\n'
+        s = '----------- Network -----------\n'
         for n, a in self.adjacent.items():
             if not self.is_cop(n):
                 s += f'Robber {n}: {a}\n'
@@ -96,7 +96,7 @@ class Graph:
 
     In the returned list, every subgraph is non-empty and has at least one vertex that is not a cop.
 
-    @param graph Graph to decompose into mini cop subgraphs
+    @param graph Network to decompose into mini cop subgraphs
     @return List of graphs that are mini cop subgraphs of the given graph
 '''
 def decompose_into_connected_components(graph):
@@ -116,7 +116,7 @@ def decompose_into_connected_components(graph):
     first_node = fresh_node(components, graph)
     while first_node is not None:
         worklist = [first_node]
-        current_component = Graph()
+        current_component = Network()
         while worklist:
             next_node = worklist.pop()
             if next_node in current_component.adjacent.keys():
@@ -162,7 +162,7 @@ def parse(file):
                 logging.error(f'The problem line has too few words!')
                 return None
             num_vertices = int(info[2])
-            graph = Graph()
+            graph = Network()
             for v in range(num_vertices):
                 graph.adjacent[v+1] = []
         else:
