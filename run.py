@@ -7,6 +7,13 @@ import argparse
 import logging
 import treedec
 
+def check_treedec(solver_treedec_path):
+    if not path.exists(solver_treedec_path):
+        return None
+    with open(solver_treedec_path) as file:
+        my_treedec = treedec.parse(file)
+    return my_treedec
+
 def write_info(info_path, info):
     with open(info_path, 'w') as file:
         file.write('var info =\n')
@@ -17,7 +24,7 @@ def read_info(info_path):
         file.readline() # consume the first javascript line
         return json.load(file)
 
-def time_run(command_dir, command_list, input_filepath, output_filepath, often):
+def time_run(command_dir, command_list, input_filepath, output_filepath, often, timeout):
     runtimes = []
     for _ in range(often):
         network_file = open(input_filepath)
@@ -29,7 +36,7 @@ def time_run(command_dir, command_list, input_filepath, output_filepath, often):
                 stdin=network_file,
                 stdout=treedec_file,
                 cwd=command_dir,
-                timeout=30)
+                timeout=timeout)
             solver_process.check_returncode()
         except Exception as e:
             logging.error(f'Solver process executed abnormally!')
@@ -47,17 +54,19 @@ if __name__ == '__main__':
         help='Path to folder with network visualization folders')
     parser.add_argument('--solvers-json', '-s', type=str, required=True,
         help='Path to folder with network visualization folders')
-    parser.add_argument('--often', type=int, default=1,
+    parser.add_argument('--often', '-o', type=int, default=1,
         help='How many times the solver should run per network')
+    parser.add_argument('--timeout', '-t', type=int, default=30,
+        help='Number of seconds after which any solver times out')
+    parser.add_argument('--overwrite', '-w', default=False, action='store_const', const=True,
+        help='Should the solver overwrite a non-existent or invalid tree decomposition?')
     parser.add_argument('--verbose', '-v', action='count')
     args = parser.parse_args()
 
     args.networks = path.normpath(args.networks)
     args.solvers_json = path.normpath(args.solvers_json)
 
-    if args.often < 1:
-        logging.error('Must run the solvers at least once.')
-        exit(1)
+    assert args.often >= 0
 
     log_levels = {
         None: logging.WARNING,
@@ -85,16 +94,32 @@ if __name__ == '__main__':
             solver_start = time.time()
             logging.info(f'Launching solver {solver_name}..')
             solver_treedec_path = f'{args.networks}/{network_directory}/structs/{solver_name}.td'
+
+            # Skip this solver, if we do not want to overwrite things and there is already a tree decomposition there
+            if not args.overwrite:
+                my_treedec = check_treedec(solver_treedec_path)
+                if my_treedec is not None:
+                    logging.warning(f'Will not overwrite {solver_treedec_path}; skipping..')
+                    continue
+
             command = solver_info['command'].split()
             command += ['-g', network_directory]
-            runtimes = time_run(solver_info['working_directory'], command, netpath, solver_treedec_path, args.often)
+            runtimes = time_run(
+                solver_info['working_directory'],
+                command,
+                netpath,
+                solver_treedec_path,
+                args.often,
+                args.timeout)
             if runtimes is None:
                 logging.warning(f'Solver {solver_name} failed at network {netpath}')
                 continue
 
             # Update network information
-            with open(solver_treedec_path) as file:
-                my_treedec = treedec.parse(file)
+            my_treedec = check_treedec(solver_treedec_path)
+            if my_treedec is None:
+                logging.warning(f'Tree decomposition of solver {solver_name} does not exist or is invalid; skipping..')
+
             my_num_nodes, my_num_joins, my_treewidth, my_joinwidth = my_treedec.collect_info()
             network_info = read_info(info_path)
             if 'treedecs' not in network_info:
@@ -107,7 +132,7 @@ if __name__ == '__main__':
             my_info['network_name'] = network_directory
             my_info['solver_title'] = solver_info['solver_title']
             my_info['network_title'] = network_directory
-            my_info['treedec_title'] = f'{solver_info['solver_title']} tree decomposition'
+            my_info['treedec_title'] = f'{solver_info["solver_title"]} tree decomposition'
             my_info['nodes'] = my_num_nodes
             my_info['join_nodes'] = my_num_joins
             my_info['edges'] = my_num_nodes - 1
