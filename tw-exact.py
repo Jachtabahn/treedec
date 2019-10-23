@@ -233,7 +233,7 @@ def compute_tree_decomposition(split_graph, fixed_treewidth, fixed_joinwidth):
             else:
                 edge.set_status(FAILED)
                 node = edge.predecessor
-    return None
+    return None # unreachable
 
 '''
     Choose a component that is most likely to fail to decompose with the given maximum bag size
