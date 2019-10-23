@@ -122,12 +122,18 @@ def decompose_into_connected_components(graph):
             if next_node in current_component.adjacent.keys():
                 continue
             neighbours = list(graph.adjacent[next_node])
+            inside_neighbours = []
+            for neigh in neighbours:
+                if neigh in current_component.adjacent.keys():
+                    inside_neighbours.append(neigh)
+
             is_cop = graph.is_cop(next_node)
-            current_component.add(next_node, neighbours, is_cop)
+            current_component.add(next_node, inside_neighbours, is_cop)
             if is_cop:
                 continue
             for neighbour in neighbours:
                 worklist.append(neighbour)
+        current_component.make_symmetric()
         components.append(current_component)
         first_node = fresh_node(components, graph)
     return components
