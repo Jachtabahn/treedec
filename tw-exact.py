@@ -315,16 +315,21 @@ def search_for_tree_decomposition(network_name, treewidths_json, fixed_treewidth
     logging.info(f'Treewidth is fixed to {fixed_treewidth}.')
     logging.info(f'Joinwidth is fixed to {fixed_joinwidth}.')
     search_tree, success = compute_tree_decomposition(input_network, fixed_treewidth, fixed_joinwidth)
-    if not success: return False
+    if not success:
+        logging.info(f'Failed computing a tree decomposition of width at most {fixed_treewidth}.')
+        return False
 
     # extract the found tree decomposition from the constructed search tree
     tree_decomposition = search_tree.extract_tree_decomposition()
-    if not tree_decomposition.validate(input_network): return False
+    if not tree_decomposition.validate(input_network):
+        logging.error(f'Computed an invalid tree decomposition!')
+        return False
     logging.info(f'Found a valid tree decomposition of width at most {fixed_treewidth}.')
     logging.debug(tree_decomposition)
 
     # save the computed tree decomposition
     tree_decomposition.save(sys.stdout)
+    logging.info('Computed tree decomposition has been output.')
     return True
 
 if __name__ == '__main__':
@@ -352,5 +357,4 @@ if __name__ == '__main__':
         args.fixed_joinwidth)
 
     if not success:
-        logging.error('Failed computing a tree decomposition.')
         exit(1)
