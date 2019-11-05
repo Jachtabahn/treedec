@@ -9,7 +9,7 @@ echo "Prepared the visualization folders."
 echo "Running all the solvers.."
 python ~/treedec/habimm/run.py \
     -n ~/treedec/visualization/networks/ \
-    -s ~/treedec/habimm/solvers.json \
+    -s ~/treedec/habimm/solvers2.json \
     -v
 echo "All solvers finished."
 
