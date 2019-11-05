@@ -102,25 +102,26 @@
 
         function displayTreedec(treedecName) {
             if (!(treedecName in info.treedecs)) { return }
-            createTreedecTable(treedecName, info.treedecs[treedecName].treedec_title)
-            if ("dot" in info.treedecs[treedecName]) {
-                displayStructure(info.treedecs[treedecName].dot, treedecName, treedecOptions)
+            treedec = info.treedecs[treedecName]
+            createTreedecTable(treedecName, treedec.treedec_title)
+            fillTable(treedecName + "-table", treedec, info.schema)
+            if ("dot" in treedec) {
+                displayStructure(treedec.dot, treedecName, treedecOptions)
             }
-            fillTable(treedecName + "-table", info.treedecs[treedecName], info.schema)
         }
 
         document.getElementById("head-title").textContent = info.network_title
         document.getElementById("main-title").textContent = info.network_title
 
-        displayStructure(info.dot, "network", networkOptions)
         fillTable("network-table", info, info.schema)
+        if ("dot" in info) {
+            displayStructure(info.dot, "network", networkOptions)
+        }
 
-        displayTreedec("habimm")
-        displayTreedec("meiji2016")
-        displayTreedec("meiji2017")
-        displayTreedec("utrecht")
-        displayTreedec("luebeck")
-
+        treedecNames = ["habimm", "meiji2016", "meiji2017", "utrecht", "luebeck"]
+        for (var i = treedecNames.length - 1; i >= 0; i--) {
+            displayTreedec(treedecNames[i])
+        }
     </script>
 </body>
 </html>
