@@ -23,3 +23,31 @@ The **p-treewidth** of a tree decomposition is the maximum of its treewidth and 
 5. Compute the 2-treewidths of all the PACE solvers' tree decompositions of PACE 2016 instances. Then use these 2-treewidths as inputs to your Python program to compute tree decompositions. Retest on PACE 2016 instances and visualize your new results.
 
 6. Register your master's thesis with one of the titles "Tree decompositions: Downsizing the bags of join nodes" or "Tree decompositions: Minimizing the size of join nodes".
+
+
+
+Take the sequoia-mso solver, look at it and and get it to run on some graph and mso formula
+	1. Input into the sequoia solver different graphs and mso formulas,
+	2. note the runtimes of the solver
+
+Meiji 2016 tree decomposition
+	1. Input into the sequoia solver the same graphs and formulas and Meiji 2016 tree decompositions of those graphs
+	2. note the runtimes of the solver
+
+Habimm tree decompositions
+	1. Input into the sequoia solver the same graphs and formulas and my own tree decompositions of those graphs
+	2. note the runtimes of the solver
+
+
+1. Reserve a time to go the ZPA
+2. Go to the ZPA and get the right document to register my thesis
+3. Fill out the document
+4. Go to Informatikzentrum and give the filled document to Rossmanith's secretary
+
+Visualize the workings of my search algorithm: I should be able to see the state from which my algorithm makes a decision like placing a cop and the state where it gets to after making the decision. For fixed input, I want to see different state components at every time step of the trace. The time steps will not spatially next to each other, but I can click myself from time step to time step. A state component will be spatial. It will be a clickable, movable, two-dimensional colourful picture, together with a key/value table which gives additional digital information about this state component (for example the number of cops).
+
+1. Then I will generate these trace visualizations for several inputs.
+2. I will look through each trace visualization and try to understand my algorithm: From any spatial state, to which other spatial state will my algorithm go?
+3. Find a specific spatial state, from where I know a better move than the one my algorithm makes.
+4. Try to generalize from that better move to a whole subalgorithm, and write it down in pseudo-code.
+5. Actually modify your algorithm to include this new subalgorithm.
