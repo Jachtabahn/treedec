@@ -89,6 +89,7 @@ if __name__ == '__main__':
         # Create a hard link in this network's directory to this project's index template
         index_path = f'{args.server_dir}/{structure_name}/index.html'
         if not path.exists(index_path):
+            cwd = os.getcwd()
             os.link(
-                '/home/tischler/treedec/habimm/network_index.html',
+                path.join(cwd, 'network_index.html'),
                 index_path)
