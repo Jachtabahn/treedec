@@ -3,15 +3,10 @@ import pandas as pd
 
 from bokeh.plotting import figure, show, output_file
 
-runtimes = [2, 5, 10, 16, 98, 102]
-
 # generate some synthetic time series for six different categories
-cats = list("abcdef")
-yy = np.random.randn(2000)
-g = np.random.choice(cats, 2000)
-for i, l in enumerate(cats):
-    yy[g == l] += i // 2
-df = pd.DataFrame(dict(score=yy, group=g))
+cats = list("a")
+yy = np.array([1, 2, 5, 10, 16, 98, 102, 200])
+df = pd.DataFrame(dict(score=yy, group=0))
 
 # find the quartiles and IQR for each category
 groups = df.groupby('group')
@@ -32,9 +27,9 @@ out = groups.apply(outliers).dropna()
 if not out.empty:
     outx = []
     outy = []
-    for keys in out.index:
-        outx.append(keys[0])
-        outy.append(out.loc[keys[0]].loc[keys[1]])
+    for outlier in out.values[0]:
+        outx.append('a')
+        outy.append(outlier)
 
 p = figure(tools="", background_fill_color="#efefef", x_range=cats, toolbar_location=None)
 
