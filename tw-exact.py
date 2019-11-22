@@ -299,9 +299,9 @@ def search_for_tree_decomposition(network_name, treewidths_json, fixed_treewidth
 
         # See what happens, when I increase the treewidth by one and decrease the joinwidth by one
         fixed_joinwidth = fixed_treewidth
-        if fixed_treewidth > 1:
-            fixed_treewidth += 1
-            fixed_joinwidth -= 1
+        # if fixed_treewidth > 1:
+        #     fixed_treewidth += 1
+        #     fixed_joinwidth -= 1
 
         logging.info(f'Extracted treewidth {fixed_treewidth}')
 
