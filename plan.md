@@ -39,11 +39,6 @@ Habimm tree decompositions
 	2. note the runtimes of the solver
 
 
-1. Reserve a time to go the ZPA
-2. Go to the ZPA and get the right document to register my thesis
-3. Fill out the document
-4. Go to Informatikzentrum and give the filled document to Rossmanith's secretary
-
 Visualize the workings of my search algorithm: I should be able to see the state from which my algorithm makes a decision like placing a cop and the state where it gets to after making the decision. For fixed input, I want to see different state components at every time step of the trace. The time steps will not spatially next to each other, but I can click myself from time step to time step. A state component will be spatial. It will be a clickable, movable, two-dimensional colourful picture, together with a key/value table which gives additional digital information about this state component (for example the number of cops).
 
 1. Then I will generate these trace visualizations for several inputs.
