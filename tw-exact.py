@@ -67,19 +67,21 @@ class DecompositionNode:
             joinwidth=self.joinwidth)
         return tree_decomposition
 
-    def write_subnet_dots(self):
+    def write_subnet_dots(self, prefix):
         dot = ''
         shell = ''
         for child in self.successors:
-            child_dot, child_shell = child.write_subnet_dots()
+            child_dot, child_shell = child.write_subnet_dots(prefix)
             dot += child_dot
             shell += child_shell
+
+        logging.debug(f"Writing dot file for node {self.id}")
 
         node_name = f'b{self.id}' if self.is_bag else f'e{self.id}'
         shell += f'dot -Tsvg -o svg/{node_name}.svg dot/{node_name}.dot\n'
         network_dot = self.subnet.visualize()
         graph_dot_path = f'dot/{node_name}.dot'
-        with open(graph_dot_path, 'w') as f:
+        with open(f'{prefix}/{graph_dot_path}', 'w') as f:
             f.write(network_dot)
 
         if self.is_bag:
@@ -108,19 +110,19 @@ class DecompositionNode:
 
         return dot, shell
 
-    def write_dot(self, network_name):
+    def write_dot(self, network_name, prefix='.'):
         dot = 'digraph {\n'
         dot += 'edge [penwidth=3]\n'
         dot += 'node [style=filled, color=aliceblue]\n'
-        dot_nodes_string, shell = self.write_subnet_dots()
+        dot_nodes_string, shell = self.write_subnet_dots(prefix)
         dot += dot_nodes_string
         dot += '}'
-        with open(f'dot/{network_name}.dot', 'w') as f:
+        with open(f'{prefix}/dot/{network_name}.dot', 'w') as f:
             f.write(dot)
 
         shell += f'\ndot -Tsvg -o svg/{network_name}.svg dot/{network_name}.dot\n'
         shell += f'inkscape svg/{network_name}.svg\n'
-        with open(f'visualize-{network_name}.sh', 'w') as f:
+        with open(f'{prefix}/visualize-{network_name}.sh', 'w') as f:
             f.write(shell)
         return dot
 
@@ -155,7 +157,15 @@ def compute_tree_decomposition(split_graph, fixed_treewidth, fixed_joinwidth):
     node = DecompositionNode(pred=None, labelled_subnet=split_graph, is_bag=True)
     node.decompose_subgraph()
     logging.debug(f'Input network has {len(node.successors)} connected components.')
+    i = 0
     while 1:
+        root = node
+        while root.predecessor is not None: root = root.predecessor
+        logging.debug(f'The node {node.id} has root {root.id}')
+        root.write_dot(f'ClebschGraph_{i}', prefix=f'search-tree-trace/{i}')
+        logging.debug(f'Written {i}th trace')
+        i += 1
+
         if node.is_bag:
             bag = node
 
@@ -169,6 +179,7 @@ def compute_tree_decomposition(split_graph, fixed_treewidth, fixed_joinwidth):
             if bag.status == FAILED:
                 if bag.predecessor is None: return bag, False
                 node = bag.predecessor
+                # this does not always delete all edges of this bag, see steps 69-73 for ClebschGraph
                 for edge in bag.successors:
                     edge.delete()
                 continue
@@ -233,7 +244,8 @@ def compute_tree_decomposition(split_graph, fixed_treewidth, fixed_joinwidth):
             else:
                 edge.set_status(FAILED)
                 node = edge.predecessor
-    return None # unreachable
+
+    # unreachable
 
 '''
     Choose a component that is most likely to fail to decompose with the given maximum bag size
@@ -318,6 +330,8 @@ def search_for_tree_decomposition(network_name, treewidths_json, fixed_treewidth
     if not success:
         logging.info(f'Failed computing a tree decomposition of width at most {fixed_treewidth}.')
         return False
+
+    search_tree.write_dot(network_name)
 
     # extract the found tree decomposition from the constructed search tree
     tree_decomposition = search_tree.extract_tree_decomposition()
