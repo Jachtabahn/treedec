@@ -1,4 +1,6 @@
 import networkx as nx
+import os
+from os import path
 import logging
 
 '''
@@ -68,12 +70,15 @@ def parse(file):
             tail, head = int(info[0]), int(info[1])
             graph.add_edge(tail, head)
 
-    print(graph.nodes())
-    print(graph.edges())
-
     return graph
 
-with open('../easy/ClebschGraph.gr') as f:
-    graph = parse(f)
+networks_path = '../hard'
+networks_graphml_path = '../hard_graphml'
+all_networks = sorted(os.listdir(networks_path))
+for i, network_filename in enumerate(all_networks):
+    network_path = path.join(networks_path, network_filename)
+    with open(network_path) as f:
+        network = parse(f)
+    dest_path = path.join(networks_graphml_path, network_filename + 'aphml')
+    nx.write_graphml(network, dest_path)
 
-nx.write_graphml(graph, 'Clebsch.graphml')
