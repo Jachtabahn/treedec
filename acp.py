@@ -13,7 +13,8 @@ def generate_structures(treewidth):
     decompositions = dict()
 
     vertices = input_network.vertices()
-    for bag in itertools.combinations(vertices, treewidth+1):
+    bagsize = treewidth + 1
+    for bag in itertools.combinations(vertices, bagsize):
         next_network = input_network.copy()
         for b in bag:
             next_network.place(b)
@@ -31,6 +32,34 @@ def generate_structures(treewidth):
             all_components.append(comp)
 
     all_components.sort(key=lambda comp: len(comp.adjacent))
+    logging.info(f'There are {len(all_components)} components')
+    logging.info(f'First:\n{all_components[0]}')
+    logging.info(f'First\'s bag:\n{all_components[0].cops}')
+    logging.info(f'Last:\n{all_components[-1]}')
+
+    answers = {}
+    for comp in all_components:
+        num_vertices = len(comp.adjacent)
+        bag = comp.cops
+        if num_vertices <= bagsize:
+            answers[comp] = True
+            continue
+
+        for v in comp.adjacent:
+            logging.debug(f'Vertex {v}')
+            considering = list(bag) + [v]
+            logging.debug(f'Finding vertex separators in {bag+[v]}')
+
+            for w in considering:
+                leftout = list(considering)
+                leftout.remove(w)
+
+                container = list(comp.adjacent)
+                for b in bag:
+                    container.remove(b)
+                for l in leftout:
+                    container.append(l)
+                logging.debug(f'Container: {container}')
 
     return True
 
