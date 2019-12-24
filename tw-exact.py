@@ -292,28 +292,34 @@ def compute_choosable_cops(escape_component, known_cops, fixed_treewidth, fixed_
             choosable.append(vertex)
     return choosable
 
-def search_for_tree_decomposition(network_name, treewidths_json, fixed_treewidth, fixed_joinwidth):
+def search_for_tree_decomposition(network_name, treewidths_json, fixed_treewidth, fixed_joinwidth, treedec_path):
     input_network = network.parse(sys.stdin)
 
     if fixed_treewidth is None:
         logging.info('Did not fix the treewidth directly.')
 
-        if treewidths_json is None or not path.exists(treewidths_json):
-            logging.error('The treewidths database path is invalid!')
-            return False
+        if treedec_path is None:
+            if treewidths_json is None or not path.exists(treewidths_json):
+                logging.error('The treewidths database path is invalid!')
+                return False
 
-        with open(treewidths_json) as file:
-            treewidths_database = json.load(file)
-        if network_name not in treewidths_database:
-            logging.error(f'Did not find network {network_name} in the treewidths database {treewidths_json}.')
-            return False
-        fixed_treewidth = treewidths_database[network_name]
+            with open(treewidths_json) as file:
+                treewidths_database = json.load(file)
+            if network_name not in treewidths_database:
+                logging.error(f'Did not find network {network_name} in the treewidths database {treewidths_json}.')
+                return False
+            fixed_treewidth = treewidths_database[network_name]
+        else:
+            with open(treedec_path) as f:
+                my_treedec = treedec.parse(f)
+                my_treedec.collect_info()
+                fixed_treewidth = my_treedec.treewidth
 
         # See what happens, when I increase the treewidth by one and decrease the joinwidth by one
         fixed_joinwidth = fixed_treewidth
-        # if fixed_treewidth > 1:
-        #     fixed_treewidth += 1
-        #     fixed_joinwidth -= 1
+        if fixed_treewidth > 1:
+            fixed_treewidth += 1
+            fixed_joinwidth -= 1
 
         logging.info(f'Extracted treewidth {fixed_treewidth}')
 
@@ -350,8 +356,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--network-name', '-g', default=None)
     parser.add_argument('--treewidths-json', '-t', type=str, default=None)
-    parser.add_argument('--fixed-treewidth', '-f', type=int, default=None)
+    parser.add_argument('--fixed-treewidth', '-w', type=int, default=None)
     parser.add_argument('--fixed-joinwidth', '-j', type=int, default=None)
+    parser.add_argument('--treedec-path', '-d', type=str, default=None)
     parser.add_argument('--verbose', '-v', action='count')
     args = parser.parse_args()
 
@@ -368,7 +375,8 @@ if __name__ == '__main__':
         args.network_name,
         args.treewidths_json,
         args.fixed_treewidth,
-        args.fixed_joinwidth)
+        args.fixed_joinwidth,
+        args.treedec_path)
 
     if not success:
         exit(1)
