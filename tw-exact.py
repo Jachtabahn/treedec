@@ -157,15 +157,7 @@ def compute_tree_decomposition(split_graph, fixed_treewidth, fixed_joinwidth):
     node = DecompositionNode(pred=None, labelled_subnet=split_graph, is_bag=True)
     node.decompose_subgraph()
     logging.debug(f'Input network has {len(node.successors)} connected components.')
-    i = 0
     while 1:
-        root = node
-        while root.predecessor is not None: root = root.predecessor
-        logging.debug(f'The node {node.id} has root {root.id}')
-        root.write_dot(f'ClebschGraph_{i}', prefix=f'search-tree-trace/{i}')
-        logging.debug(f'Written {i}th trace')
-        i += 1
-
         if node.is_bag:
             bag = node
 
@@ -336,8 +328,6 @@ def search_for_tree_decomposition(network_name, treewidths_json, fixed_treewidth
     if not success:
         logging.info(f'Failed computing a tree decomposition of width at most {fixed_treewidth}.')
         return False
-
-    search_tree.write_dot(network_name)
 
     # extract the found tree decomposition from the constructed search tree
     tree_decomposition = search_tree.extract_tree_decomposition()
