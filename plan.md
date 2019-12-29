@@ -52,5 +52,5 @@ I should be able to see the state from which my algorithm makes a decision like 
 1. Then I will generate these trace visualizations for several inputs.
 2. I will look through each trace visualization and try to understand my algorithm: From any spatial state, to which other spatial state will my algorithm go?
 3. Find a specific spatial state, from where I know a better move, than the one my algorithm makes.
-4. Try to generalize from that better move to a whole better subalgorithm, and write that whole better subalgorithm down in pseudo-code.
+4. Try to generalize from that better move to a whole better subalgorithm, and write that subalgorithm down in pseudo-code.
 5. Modify your actual algorithm to include this new subalgorithm.
