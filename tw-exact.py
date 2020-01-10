@@ -346,8 +346,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--network-name', '-g', default=None)
     parser.add_argument('--treewidths-json', '-t', type=str, default=None)
-    parser.add_argument('--fixed-treewidth', '-w', type=int, default=None)
-    parser.add_argument('--fixed-joinwidth', '-j', type=int, default=None)
+    parser.add_argument('--width', '-w', type=int, default=None)
+    parser.add_argument('--joinwidth', '-j', type=int, default=None)
     parser.add_argument('--treedec-path', '-d', type=str, default=None)
     parser.add_argument('--verbose', '-v', action='count')
     args = parser.parse_args()
@@ -364,8 +364,8 @@ if __name__ == '__main__':
     success = search_for_tree_decomposition(
         args.network_name,
         args.treewidths_json,
-        args.fixed_treewidth,
-        args.fixed_joinwidth,
+        args.width,
+        args.joinwidth,
         args.treedec_path)
 
     if not success:
