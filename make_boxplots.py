@@ -1,6 +1,7 @@
 import pandas
 import bokeh.plotting
 import bokeh.layouts
+import bokeh.io
 import sqlite3
 
 connection = sqlite3.connect('/home/habimm/treedec/sequoia/Sequoia.db')
@@ -18,7 +19,7 @@ ids_set = [274, 275, 276, 466, 467, 468, 181, 182, 183, 451, 452, 453, 655, 656,
 runtime_id_strings = []
 runtimes = []
 for input_id, runtime in runtime_rows:
-    # if input_id not in ids_set: continue
+    if input_id not in ids_set: continue
     runtime_id_strings.append(str(input_id))
     runtimes.append(runtime)
 input_id_strings = list(set(runtime_id_strings))
@@ -87,9 +88,7 @@ for boxplot_index in range(0, num_boxplots, boxplots_per_figure):
     batch.ygrid.grid_line_color = 'white'
     batch.grid.grid_line_width = 2
     batch.xaxis.major_label_text_font_size = '12pt'
+    batch.yaxis.major_label_text_font_size = '12pt'
 
-    batches.append(batch)
-
-bokeh.plotting.output_file('all_boxplots.html', title='All Sequoia runtime boxplots')
-all_boxplots = bokeh.layouts.row(*batches)
-bokeh.plotting.show(all_boxplots)
+    bokeh.plotting.output_file('batch' + str(boxplot_index) + '.html', title='Sequoia runtime boxplots')
+    bokeh.plotting.show(batch)
