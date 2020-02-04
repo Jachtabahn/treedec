@@ -38,5 +38,11 @@ AKTIONEN
 4. Bereite ein LaTeX-Template für Deine Masterarbeit vor.
 
 5. Bestimme für 16 Formeln, ob man die Formel nur auf einen einfachen Graphen, nur auf einen Inzidenzgraphen oder auf beide anwenden kann.
-6. Messe Laufzeiten von Sequoia auf 72 Graphen und 16 Formeln.
+6. Messe Laufzeiten von Sequoia auf 72 Graphen, 16 Formeln und 269 Baumzerlegungen.
 7. Berechne für jeden Graphen eine Baumzerlegung mit einer Joinweite, die geringer als die Baumweite dieses Graphen ist.
+
+
+
+Zeit zur Berechnung einer Eigenschaft pro Formel pro Graph pro Baumzerlegung
+
+Zeit zur Berechnung einer Baumzerlegung pro Graph pro Zerleger
