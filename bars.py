@@ -2,6 +2,8 @@ import bokeh.io
 import bokeh.plotting
 import sqlite3
 
+# Call this script with bokeh serve bars.py --port 5001 --dev bars.py
+
 # Fetch the rows to display from the database.
 connection = sqlite3.connect("/home/habimm/treedec/data/data.db")
 cursor = connection.cursor()
