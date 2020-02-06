@@ -34,7 +34,7 @@ cursor.execute("""
     AND (decomposer_name == 'meiji2016' OR decomposer_name == 'habimm' OR decomposer_name == '')
     AND comment is NULL
     AND sequoia_inputs.rowid >= ?
-  """, (args.start_input_id,))
+""", (args.start_input_id,))
 inputs = cursor.fetchall()
 
 # Abort on an invalid path.
