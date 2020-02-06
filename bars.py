@@ -1,44 +1,73 @@
-from bokeh.io import show, output_file
-from bokeh.plotting import figure
+from bokeh.io import save, output_file
+from bokeh.plotting import figure, ColumnDataSource
+from bokeh.models import HoverTool
 
-runtime_rows = [
-("1",65),
-("2",120),
-("3",116),
-("6",69),
-("7",65),
-("8",68),
-("11",216),
-("12",3277),
-("13",216),
-("16",1018),
-("17",3925),
-("18",2021),
-("21",67),
-("22",165),
-("23",119),
-("26",970),
-("27",6000),
-("28",816),
-("31",168),
-("32",115),
-]
+runtimes_table = {
+  "input_id": [
+    "1",
+    "2",
+    "3",
+    "6",
+    "7",
+    "8",
+    "11",
+    "12",
+    "13",
+    "16",
+    "17",
+    "18",
+    "21",
+    "22",
+    "23",
+    "26",
+    "27",
+    "28",
+    "31",
+    "32"
+  ],
+  "milliseconds": [
+    65,
+    120,
+    116,
+    69,
+    65,
+    68,
+    216,
+    3277,
+    216,
+    1018,
+    3925,
+    2021,
+    67,
+    165,
+    119,
+    970,
+    6000,
+    816,
+    168,
+    115
+  ]
+}
 
-input_ids = [row[0] for row in runtime_rows]
-runtimes = [row[1] for row in runtime_rows]
-
-plot = figure(x_range=input_ids, plot_height=250, title="Sequoia runtimes")
-plot.vbar(x=input_ids, top=runtimes, width=0.9)
-
-hover.tooltips = [
-  ("Sample", "@names"),
-  ("Pressure", "@x_values mTorr"),
-  ("Roughness", "@y_values nm"),
-]
-plot.tools.append(hover)
-
+# Configure the bar chart with the Sequoia input IDs and their runtimes.
+plot = figure(
+  title="Sequoia runtimes",
+  x_range=runtimes_table["input_id"],
+  plot_height=250,
+  tools="box_zoom,reset,hover",
+  tooltips=[
+    ("Input ID", "@input_id"),
+    ("Milliseconds", "@milliseconds")
+  ]
+)
+plot.vbar(
+  x="input_id",
+  top="milliseconds",
+  width=0.9,
+  source=ColumnDataSource(runtimes_table))
 plot.xgrid.grid_line_color = None
 plot.y_range.start = 0
 
+# Write the bar chart as an HTML file.
 output_file("bars.html")
-show(plot)
+save(plot)
