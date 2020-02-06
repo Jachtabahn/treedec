@@ -1,109 +1,108 @@
 import subprocess
-import treedec
 import os
 import time
-import argparse
-import logging
-import sqlite3
-import re
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--network-regexp', '-n', type=str, default='.*')
-parser.add_argument('--solver-regexp', '-s', type=str, default='.*')
-parser.add_argument('--database-path', '-d', type=str, default='../csv/data.db')
-parser.add_argument('--timeout', '-t', type=int, default=60) # in seconds
-parser.add_argument('--verbose', '-v', action='count')
-args = parser.parse_args()
+SEQUOIA_PATH = "/home/habimm/treedec/sequoia/src/sequoia"
 
-log_levels = {
-    None: logging.WARNING,
-    1: logging.INFO,
-    2: logging.DEBUG
-}
-if args.verbose is not None and args.verbose >= len(log_levels):
-    args.verbose = len(log_levels)-1
-logging.basicConfig(format='%(message)s', level=log_levels[args.verbose])
+inputs = [
+  (
+    1,
+    "/var/www/html/networks/fuzix_devio_kprintf",
+    "/home/habimm/treedec/sequoia/formulae/d2-dominating-set.mso",
+    "Bool",
+    False,
+    ""
+  ),
+  (
+    2,
+    "/var/www/html/networks/fuzix_devio_kprintf",
+    "/home/habimm/treedec/sequoia/formulae/clique.mso",
+    "MaxCardSet",
+    False,
+    "meiji2016"
+  ),
+  (
+    3,
+    "/var/www/html/networks/fuzix_devio_kprintf",
+    "/home/habimm/treedec/sequoia/formulae/hamiltonian-cycle.mso",
+    "Bool",
+    True,
+    "habimm"
+  ),
+  (
+    4,
+    "/var/www/html/networks/fuzix_process_getproc",
+    "/home/habimm/treedec/sequoia/formulae/steiner.mso",
+    "Bool",
+    False,
+    "habimm"
+  ),
+  (
+    5,
+    "/var/www/html/networks/McGeeGraph",
+    "/home/habimm/treedec/sequoia/formulae/3col.mso",
+    "Bool",
+    False,
+    "meiji2016"
+  ),
+  (
+    6,
+    "/var/www/html/networks/McGeeGraph",
+    "/home/habimm/treedec/sequoia/formulae/longest-cycle.mso",
+    "Bool",
+    True,
+    ""
+  )
+]
 
-connection = sqlite3.connect(args.database_path)
-def regexp(expr, text):
-    regexp = re.compile(f'^{expr}$')
-    return regexp.search(text) is not None
-connection.create_function('REGEXP', 2, regexp)
-cursor = connection.cursor()
+def check_path(path):
+  if not os.path.exists(path):
+    print('Aborting: Path', path, 'doesn\'t exist.')
+    exit(1)
 
-# Load some tree decomposition plus solver combinations from the database to compute runtimes for
-# These combinations may be restricted via regular expressions
-cursor.execute('''
-    SELECT
-        treedecs.rowid,
-        network_name,
-        networks.path,
-        treedecs.width,
-        treedecs.joinwidth,
-        solver_name,
-        solvers.cwd,
-        solvers.command
-        FROM treedecs INNER JOIN networks INNER JOIN solvers
-        ON treedecs.solver_name == solvers.name AND treedecs.network_name == networks.name
-        AND network_name REGEXP ?
-        AND solver_name  REGEXP ?;
-''', (args.network_regexp,args.solver_regexp))
-network_rows = cursor.fetchall()
+for input_id, network_directory, formula_path, evaluation_string, only_incidence, decomposer_name in inputs:
+  network_path = os.path.join(network_directory, "structs/network.graphml")
+  check_path(network_path)
 
-TEMPORARY_TREEDEC_PATH = '/tmp/treedec.td'
+  sequoia_command = [
+    SEQUOIA_PATH,
+    "-g",
+    network_path,
+    "-f",
+    formula_path,
+    "-e",
+    evaluation_string
+  ]
 
-num_treedecs = len(network_rows)
-logging.debug(f'Matched {num_treedecs} tree decompositions.')
+  if only_incidence:
+    sequoia_command.append("-2")
 
-for iteration, (treedec_id, network_name, network_path, width, joinwidth, solver_name, solver_cwd, solver_cmd) in enumerate(network_rows):
-    logging.debug(f'\n----------{iteration+1}/{num_treedecs}--------------------------')
-    logging.debug(f'Solving {network_name} with {solver_name}')
+  if decomposer_name:
+    treedec_path = os.path.join(network_directory, f"structs/{decomposer_name}.graphml")
+    check_path(treedec_path)
+    sequoia_command += ["-t", treedec_path]
 
-    # Prepare the command to create the solver process
-    solver_cmd_list = solver_cmd.split()
-    if solver_name == 'habimm':
-        solver_cmd_list += ['--width', str(width), '--joinwidth', str(joinwidth)]
+  print("***********************************************************************************")
+  print("Input", input_id)
+  print("***********************************************************************************")
+  print("Run:", " ".join(sequoia_command))
 
-    # Call the solver and wait until it terminates
-    start = time.time()
-    with open(os.path.join(network_path, 'structs/network.gr')) as network_file:
-        with open(os.path.join(network_path, TEMPORARY_TREEDEC_PATH), 'w') as stdout_file:
-            with open(os.devnull, 'w') as null_file:
-                try:
-                    subprocess.run(
-                        solver_cmd_list,
-                        cwd=solver_cwd,
-                        stdin=network_file,
-                        stdout=stdout_file,
-                        stderr=null_file,
-                        timeout=args.timeout)
-                except Exception as e:
-                    logging.error(f'Solver {solver_name} failed! Aborting..')
-                    logging.error(e)
-                    exit(1)
-                except subprocess.TimeoutExpired:
-                    logging.error(f'Solver {solver_name} surpassed timeout of {args.timeout} seconds!')
-                    logging.error(f'Skipping network {network_name} for solver {solver_name}..')
-                    continue
-    milliseconds = int((time.time() - start) * 1000)
+  max_milliseconds = 6000
+  start = time.time()
+  try:
+    with open(os.devnull, "w") as null_file:
+      subprocess.run(sequoia_command, check=True, stdout=null_file, stderr=null_file, timeout=max_milliseconds / 1000)
+  except subprocess.CalledProcessError as error:
+    print("Aborting: Sequoia returned non-zero exit status", error.returncode, ".")
+    exit(error.returncode)
+  except subprocess.TimeoutExpired as expired:
+    pass
 
-    # Check if the new output corresponds to an equivalent tree decomposition that this solver
-    # has computed once in the past
-    with open(os.path.join(network_path, f'structs/{solver_name}.td')) as original_file:
-        original_treedec = treedec.parse(original_file)
-    with open(TEMPORARY_TREEDEC_PATH) as new_file:
-        new_treedec = treedec.parse(new_file)
-    if str(original_treedec) == str(new_treedec):
-        logging.debug('Computed the expected tree decomposition.')
-    else:
-        logging.error('Computed an unexpected tree decomposition!')
-        logging.error(f'Solver {solver_name} failed! Aborting..')
-        exit(1)
+  milliseconds = int((time.time() - start) * 1000)
+  if milliseconds <= max_milliseconds:
+    print("Input", input_id, "consumed", milliseconds, "milliseconds.")
+  else:
+    print("Input", input_id, "consumed more milliseconds than", max_milliseconds)
+  print()
 
-    # Add the new runtime to the database
-    # In the case of the Habimm solver, also add the used parameters to the database
-    cursor.execute('INSERT INTO treedec_runtimes VALUES (?, ?)', (treedec_id, milliseconds))
-    connection.commit()
-    logging.debug(f'Added {milliseconds} to the treedec_runtimes table to treedec id {treedec_id}')
-
-connection.close()
+print("OK.")
