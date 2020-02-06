@@ -1,6 +1,5 @@
-from bokeh.io import save, output_file
-from bokeh.models import HoverTool
-from bokeh.plotting import figure, ColumnDataSource
+import bokeh.io
+import bokeh.plotting
 import sqlite3
 
 # Fetch the rows to display from the database.
@@ -28,10 +27,11 @@ runtimes_table = {
 }
 
 # Create the bar chart with the Sequoia input IDs and their runtimes.
-plot = figure(
+plot = bokeh.plotting.figure(
   title="Sequoia runtimes",
   x_range=runtimes_table["input_id"],
-  plot_height=250,
+  plot_height=1080,
+  plot_width=1920,
   tools="box_zoom,reset,hover",
   toolbar_location=None,
   tooltips=[
@@ -44,7 +44,7 @@ plot.vbar(
   top="milliseconds",
   color="color",
   width=0.9,
-  source=ColumnDataSource(runtimes_table))
+  source=bokeh.plotting.ColumnDataSource(runtimes_table))
 plot.yaxis.axis_label = "Runtime in milliseconds"
 plot.xaxis.axis_label = "Input IDs"
 plot.xaxis.major_tick_line_width = 0
@@ -53,6 +53,4 @@ plot.yaxis.axis_line_width = 0
 plot.xgrid.grid_line_color = None
 plot.y_range.start = 0
 
-# Write the bar chart as an HTML file.
-output_file("bars.html")
-save(plot)
+bokeh.io.curdoc().add_root(plot)
