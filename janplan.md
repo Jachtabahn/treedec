@@ -33,16 +33,19 @@ Masterarbeit: Latex Template, siehe ClassicThesis
 AKTIONEN
 ----------------------------------------
 1. Beschreibe die Inhalte Deiner Masterarbeit und ordne diese Inhalte.
-2. Erstelle ein Balkendiagramm für Laufzeiten von Sequoia auf verschiedenen Graphen.
-3. Beschreibe Dein Programm, welches eine Baumzerlegung berechnet.
 4. Bereite ein LaTeX-Template für Deine Masterarbeit vor.
 
-5. Bestimme für 16 Formeln, ob man die Formel nur auf einen einfachen Graphen, nur auf einen Inzidenzgraphen oder auf beide anwenden kann.
-6. Messe Laufzeiten von Sequoia auf 72 Graphen, 16 Formeln und 269 Baumzerlegungen.
-7. Berechne für jeden Graphen eine Baumzerlegung mit einer Joinweite, die geringer als die Baumweite dieses Graphen ist.
+Berechne für die restlichen 19 Graphen eine Baumzerlegung mit einer Joinweite, die geringer als die Baumweite dieses Graphen ist.
 
-
-
+PLAN FÜR HEUTE
+----------------------------------------
 Zeit zur Berechnung einer Eigenschaft pro Formel pro Graph pro Baumzerlegung
+    Erstelle eine Tabelle mit Eingaben für Sequoia mit 16 Formeln, 53 Graphen und 212 Baumzerlegungen.
+    Messe Laufzeiten von Sequoia auf diesen Eingaben.
+    Erstelle ein Balkendiagramm für alle diese Laufzeiten.
 
 Zeit zur Berechnung einer Baumzerlegung pro Graph pro Zerleger
+    Messe Laufzeiten von den vier Zerlegern auf den Eingaben in der Datenbank.
+    Erstelle ein Balkendiagramm für alle diese Laufzeiten.
+
+Beschreibe Deinen Habimm-Zerleger, welcher eine Baumzerlegung eines Graphen berechnet.
