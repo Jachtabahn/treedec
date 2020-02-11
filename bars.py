@@ -16,6 +16,8 @@ cursor.execute("""
 inputs = cursor.fetchall()
 connection.close()
 
+inputs = [input for input in inputs if input[2] == 'habimm']
+
 # Convert the fetched rows to a dictionary with a key for each column.
 decomposer_color = {
   "": "red",
