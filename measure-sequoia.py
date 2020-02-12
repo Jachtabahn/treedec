@@ -58,7 +58,7 @@ for input_id, network_directory, formula_path, evaluation_string, only_incidence
     "-e",
     evaluation_string
   ]
-  if only_incidence:
+  if only_incidence == "true":
     sequoia_command.append("-2")
   if decomposer_name:
     treedec_path = os.path.join(network_directory, f"structs/{decomposer_name}.graphml")
