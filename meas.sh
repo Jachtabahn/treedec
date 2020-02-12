@@ -1,0 +1,20 @@
+python measure-sequoia.py --update-database \
+&& python measure-sequoia.py --update-database \
+&& python measure-sequoia.py --update-database \
+&& python measure-sequoia.py --update-database \
+&& python measure-sequoia.py --update-database \
+&& python measure-sequoia.py --update-database \
+&& python measure-sequoia.py --update-database \
+&& python measure-sequoia.py --update-database \
+&& python measure-sequoia.py --update-database \
+&& python measure-sequoia.py --update-database \
+&& python measure-sequoia.py --update-database \
+&& python measure-sequoia.py --update-database \
+&& python measure-sequoia.py --update-database \
+&& python measure-sequoia.py --update-database \
+&& python measure-sequoia.py --update-database \
+&& python measure-sequoia.py --update-database \
+&& python measure-sequoia.py --update-database \
+&& python measure-sequoia.py --update-database \
+&& python measure-sequoia.py --update-database \
+&& python measure-sequoia.py --update-database \
