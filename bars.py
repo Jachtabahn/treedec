@@ -8,15 +8,27 @@ import sqlite3
 connection = sqlite3.connect("/home/habimm/treedec/data/data.db")
 cursor = connection.cursor()
 cursor.execute("""
-  SELECT input_id, milliseconds, decomposer_name
+  SELECT input_id, AVG(milliseconds), COUNT(*), network_name, network_id, formula_name, decomposer_name
     FROM sequoia_runtimes JOIN sequoia_inputs ON
-    sequoia_runtimes.input_id == sequoia_inputs.rowid
-    AND milliseconds < 6000
+    sequoia_runtimes.input_id == sequoia_inputs.rowid GROUP BY input_id
 """)
 inputs = cursor.fetchall()
 connection.close()
 
-inputs = [input for input in inputs if input[2] == 'habimm']
+sequoia_problems = {(input[3], input[4]): [] for input in inputs}
+for input in inputs:
+  sequoia_problems[(input[3], input[4])].append(input)
+
+for problem, problem_inputs in list(sequoia_problems.items()):
+  if len(problem_inputs) != 3:
+    del sequoia_problems[problem]
+
+inputs_list = list(sequoia_problems.values())
+inputs = sum(inputs_list, [])
+
+inputs = [input for input in inputs if input[4] == "hamiltonian-cycle"]
+
+# inputs.sort(key = lambda row: row[1])
 
 # Convert the fetched rows to a dictionary with a key for each column.
 decomposer_color = {
@@ -25,9 +37,9 @@ decomposer_color = {
   "meiji2016": "blue"
 }
 runtimes_table = {
-  "input_id": [str(input_id) for input_id, _, _ in inputs],
-  "milliseconds": [milliseconds for _, milliseconds, _ in inputs],
-  "color": [decomposer_color[decomposer_name] for _, _, decomposer_name in inputs]
+  "input_id": [str(input_id) for input_id, _, _, _, _, _ in inputs],
+  "milliseconds": [milliseconds for _, milliseconds, _, _, _, _ in inputs],
+  "color": [decomposer_color[decomposer_name] for _, _, _, _, _, decomposer_name in inputs]
 }
 
 # Create the bar chart with the Sequoia input IDs and their runtimes.
