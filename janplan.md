@@ -29,13 +29,24 @@ Berechne für die restlichen 19 Graphen eine Baumzerlegung mit einer Joinweite, 
 
 PLAN FÜR HEUTE
 ----------------------------------------
-Zeit zur Berechnung einer Eigenschaft pro Formel pro Graph pro Baumzerlegung
-    Erstelle eine Tabelle mit Eingaben für Sequoia mit 16 Formeln, 53 Graphen und 212 Baumzerlegungen.
-    Messe Laufzeiten von Sequoia auf diesen Eingaben.
-    Erstelle ein Balkendiagramm für alle diese Laufzeiten.
 
-Zeit zur Berechnung einer Baumzerlegung pro Graph pro Zerleger
-    Messe Laufzeiten von den vier Zerlegern auf den Eingaben in der Datenbank.
-    Erstelle ein Balkendiagramm für alle diese Laufzeiten.
+Erstelle eine Tabelle mit Eingaben für Sequoia mit 16 Formeln, 53 Graphen und 212 Baumzerlegungen.
+
+Messe Laufzeiten von Sequoia auf diesen Eingaben.
+
+Erstelle ein Balkendiagramm für alle diese Laufzeiten.
+
+Sortiere jedes Säulendiagramm nach durchschnittlicher Laufzeit über die Baumzerlegungen.
+
+Erstelle 16 Säulendiagramme. Erstelle ein Säulendiagramm pro Formel.
+
+Finde alle Graph-Formel-Kombinationen, für welche es keine drei Eingaben mit den Baumzerlegern "habimm", "meiji2016" und "" gibt. Dann lösche alle Eingaben, die eine dieser Graph-Formel-Kombinationen enthalten.
+
+Finde alle Graph-Formel-Kombinationen, für welche die Habimm-Baumzerlegung höchstens so lange berechnet wurde wie die meiji2016-Baumzerlegung und die Standardbaumzerlegung. Lösche alle Eingaben, die keine dieser Graph-Formel-Kombinationen enthalten.
+
+
+Messe Laufzeiten von den vier Zerlegern auf den Eingaben in der Datenbank.
+
+Erstelle ein Balkendiagramm für alle diese Laufzeiten.
 
 Beschreibe Deinen Habimm-Zerleger, welcher eine Baumzerlegung eines Graphen berechnet.
