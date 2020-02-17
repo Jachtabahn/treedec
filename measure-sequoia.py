@@ -31,7 +31,7 @@ cursor.execute("""
     FROM sequoia_inputs JOIN formulae JOIN networks
     ON sequoia_inputs.network_name == networks.name
     AND sequoia_inputs.formula_name == formulae.name
-    AND (decomposer_name == 'meiji2016' OR decomposer_name == 'habimm' OR decomposer_name == '')
+    AND (decomposer_name == 'meiji2016' OR decomposer_name == 'habimm' OR decomposer_name == 'sequoia')
     AND comment is NULL
     AND sequoia_inputs.rowid >= ?
 """, (args.start_input_id,))
@@ -60,7 +60,7 @@ for input_id, network_directory, formula_path, evaluation_string, only_incidence
   ]
   if only_incidence == "true":
     sequoia_command.append("-2")
-  if decomposer_name:
+  if decomposer_name != "sequoia":
     treedec_path = os.path.join(network_directory, f"structs/{decomposer_name}.graphml")
     check_path(treedec_path)
     sequoia_command += ["-t", treedec_path]
