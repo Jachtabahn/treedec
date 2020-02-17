@@ -37,3 +37,5 @@ Messe Laufzeiten von den vier Zerlegern auf den Eingaben in der Datenbank.
 Erstelle ein Balkendiagramm für alle diese Laufzeiten.
 
 Beschreibe Deinen Habimm-Zerleger, welcher eine Baumzerlegung eines Graphen berechnet.
+
+Informiere Dich, wie Du die beiden Titeln Deiner Masterarbeit wegen Rechtschreibfehlern ändern kannst.
