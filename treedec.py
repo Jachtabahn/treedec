@@ -182,7 +182,7 @@ def fill_up(trees, bag_id, parents, edges):
         fill_up(trees, child_id, child_parents, edges)
 
 def parse(file):
-    index, edges, trees = 1, [], []
+    edges, trees = [], []
     for line in file:
         if line[0] == 'c': continue
         elif line[0] == 's': continue
@@ -191,10 +191,10 @@ def parse(file):
             line = line[:-1]
         info = line.split(' ')
         if line[0] == 'b':
+            bag_id = int(info[1])
             bag_content = info[2:]
             convert_to_ints(bag_content)
-            tree_decomposition = TreeDecomposition(bag_content, index, [])
-            index += 1
+            tree_decomposition = TreeDecomposition(bag_content, bag_id, [])
             trees.append(tree_decomposition)
         else:
             convert_to_ints(info)
@@ -202,6 +202,7 @@ def parse(file):
     if not trees:
         logging.error('Tree decomposition with no bags is invalid.')
         return None
+    trees.sort(key = lambda treedec: treedec.id)
     fill_up(trees, 1, [], edges)
     return trees[0]
 
