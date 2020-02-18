@@ -70,8 +70,8 @@ for decomposer_name in decomposer_names:
 plot = bokeh.plotting.figure(
   title="Sequoia Runtimes on the Formula " + args.present_formula,
   x_range=input_runtimes["network_id"],
-  plot_height=1080,
-  plot_width=1920,
+  plot_height=1000,
+  plot_width=1900,
   tools="box_zoom,reset,hover",
   toolbar_location=None,
   tooltips=[
