@@ -96,7 +96,7 @@ class DecompositionNode:
             SUCCESS: 'green3'
         }
 
-        dot += f'{node_name} [label="{node_label}", penwidth=6, '
+        dot += f'{node_name} [label="", penwidth=6, '
         dot += 'shape=rectangle, '
         dot += f'color={status_color[self.status]}, '
         dot += f'fillcolor="{node_color}", '
@@ -172,8 +172,8 @@ def compute_tree_decomposition(split_graph, fixed_treewidth, fixed_joinwidth):
                 if bag.predecessor is None: return bag, False
                 node = bag.predecessor
                 # this does not always delete all edges of this bag, see steps 69-73 for ClebschGraph
-                for edge in bag.successors:
-                    edge.delete()
+                # for edge in bag.successors:
+                #     edge.delete()
                 continue
 
             unknown_bag_edges = [edge for edge in bag.successors if edge.status == UNKNOWN]
