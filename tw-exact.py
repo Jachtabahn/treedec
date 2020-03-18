@@ -329,6 +329,8 @@ def search_for_tree_decomposition(network_name, treewidths_json, fixed_treewidth
         logging.info(f'Failed computing a tree decomposition of width at most {fixed_treewidth}.')
         return False
 
+    search_tree.write_dot(network_name)
+
     # extract the found tree decomposition from the constructed search tree
     tree_decomposition = search_tree.extract_tree_decomposition()
     if not tree_decomposition.validate(input_network):
